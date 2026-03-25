@@ -41,7 +41,7 @@ export default function ElectricityDashboard() {
           <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5">
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse" />
-              Power Consumption — Time Series
+              Power Consumption : Time Series
             </h3>
             <ResponsiveContainer width="100%" height={320}>
               <AreaChart data={data}>

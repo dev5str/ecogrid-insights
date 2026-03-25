@@ -1,4 +1,4 @@
-# EcoGrid — Real-Time IoT Environmental Monitoring
+# EcoGrid : Real-Time IoT Environmental Monitoring
 
 A real-time IoT-based environmental monitoring system for detecting and reducing resource wastage in institutions. Monitors electricity usage, water consumption, and garbage levels using smart sensors with a centralized web dashboard.
 

@@ -19,7 +19,7 @@ const roles: {
   { role: "electricity", label: "Electricity Admin", icon: Zap, desc: "Monitor power consumption across campus", pixelColors: ["#422006", "#713f12", "#ca8a04", "#f97316"] },
   { role: "water", label: "Water Admin", icon: Droplets, desc: "Track water usage and detect leaks", pixelColors: ["#172554", "#1e40af", "#2563eb", "#06b6d4"] },
   { role: "waste", label: "Waste Admin", icon: Trash2, desc: "Manage waste bins and collection", pixelColors: ["#052e16", "#14532d", "#22c55e", "#10b981"] },
-  { role: "head", label: "Head User", icon: Crown, desc: "Master control panel — all modules", pixelColors: ["#3b0764", "#6b21a8", "#a855f7", "#ec4899"] },
+  { role: "head", label: "Head User", icon: Crown, desc: "Master control panel : all modules", pixelColors: ["#3b0764", "#6b21a8", "#a855f7", "#ec4899"] },
 ];
 
 const dashboardRoutes: Record<UserRole, string> = {

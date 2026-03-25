@@ -11,7 +11,7 @@ export default function HowItWorks() {
             <div className="mb-16 text-center">
               <p className="mb-3 text-sm font-medium text-primary">WORKFLOW</p>
               <h1 className="text-4xl font-bold md:text-5xl">How It Works</h1>
-              <p className="mt-4 text-lg text-muted-foreground">Sensor to cloud to dashboard — in real time.</p>
+              <p className="mt-4 text-lg text-muted-foreground">Sensor to cloud to dashboard : in real time.</p>
             </div>
           </BlurFade>
           <div className="grid gap-8 md:grid-cols-3">

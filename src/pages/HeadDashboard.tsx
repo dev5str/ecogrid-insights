@@ -41,9 +41,9 @@ export default function HeadDashboard() {
 
       <BlurFade delay={0.1}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatusCard title="Electricity — Current Load" value={`${elec.currentLoad} kW`} icon={Zap} severity={elec.currentLoad > 340 ? "critical" : elec.currentLoad > 280 ? "warning" : "normal"} subtitle={`Peak: ${elec.peakToday} kW`} />
-          <StatusCard title="Water — Flow Rate" value={`${water.currentFlow} L/min`} icon={Droplets} severity={water.currentFlow > 75 ? "critical" : water.currentFlow > 60 ? "warning" : "normal"} subtitle={`${water.anomalyCount} anomalies`} />
-          <StatusCard title="Waste — Critical Bins" value={waste.criticalBins} icon={Trash2} severity={waste.criticalBins > 3 ? "critical" : waste.criticalBins > 0 ? "warning" : "normal"} subtitle={`${waste.bins.length} total bins`} />
+          <StatusCard title="Electricity : Current Load" value={`${elec.currentLoad} kW`} icon={Zap} severity={elec.currentLoad > 340 ? "critical" : elec.currentLoad > 280 ? "warning" : "normal"} subtitle={`Peak: ${elec.peakToday} kW`} />
+          <StatusCard title="Water : Flow Rate" value={`${water.currentFlow} L/min`} icon={Droplets} severity={water.currentFlow > 75 ? "critical" : water.currentFlow > 60 ? "warning" : "normal"} subtitle={`${water.anomalyCount} anomalies`} />
+          <StatusCard title="Waste : Critical Bins" value={waste.criticalBins} icon={Trash2} severity={waste.criticalBins > 3 ? "critical" : waste.criticalBins > 0 ? "warning" : "normal"} subtitle={`${waste.bins.length} total bins`} />
         </div>
       </BlurFade>
 
