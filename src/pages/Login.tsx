@@ -5,7 +5,6 @@ import { Zap, Droplets, Trash2, Crown, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlasmaPageBackground } from "@/components/ui/plasma-background";
 import { PixelCard } from "@/components/ui/pixel-card";
-import { BorderBeam } from "@/components/ui/border-beam";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { EcoGridLogo } from "@/components/brand/EcoGridLogo";
@@ -54,8 +53,6 @@ export default function Login() {
 
         <BlurFade delay={0.2}>
           <div className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl overflow-hidden">
-            <BorderBeam size={100} duration={8} colorFrom="#22c55e" colorTo="#06b6d4" />
-
             <div className="p-8">
               <div className="text-center mb-8">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl ring-1 ring-primary/25 shadow-lg shadow-primary/10">

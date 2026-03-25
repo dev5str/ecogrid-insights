@@ -7,7 +7,7 @@ import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
 import { Marquee } from "@/components/ui/marquee";
 import { PixelCard } from "@/components/ui/pixel-card";
 import { MarketingLayout } from "@/components/marketing/MarketingLayout";
-import { TECH_STACK } from "@/content/marketing";
+import { CLIENT_MARQUEE_NAMES } from "@/content/marketing";
 
 export default function Landing() {
   return (
@@ -28,19 +28,23 @@ export default function Landing() {
           </BlurFade>
 
           <BlurFade delay={0.2} inView>
-            <h1 className="text-5xl font-bold leading-[1.05] tracking-tight md:text-7xl lg:text-8xl">
-              Smart Campus
-              <br />
-              <span className="bg-gradient-to-r from-primary via-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                Environmental Intelligence
+            <h1 className="text-balance font-bold leading-[1.08] tracking-tight">
+              <span className="block bg-gradient-to-r from-primary via-emerald-400 to-teal-300 bg-clip-text text-transparent text-5xl md:text-7xl lg:text-8xl">
+                ECOGRID
+              </span>
+              <span className="mt-3 block text-2xl font-semibold text-foreground md:text-4xl lg:text-5xl">
+                Smart campus intelligence
+              </span>
+              <span className="mt-2 block text-lg font-medium text-muted-foreground md:text-xl">
+                Electricity · water · waste — one dashboard
               </span>
             </h1>
           </BlurFade>
 
           <BlurFade delay={0.3} inView>
-            <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Real-time IoT monitoring for electricity consumption, water usage & leakage detection,
-              and waste management. Built for institutional campuses with smart sensor integration.
+            <p className="mx-auto mt-8 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              EcoGrid delivers real-time IoT monitoring and alerts for campuses and institutions. Sensors,
+              cloud, and role-based dashboards in one place.
             </p>
           </BlurFade>
 
@@ -92,10 +96,10 @@ export default function Landing() {
       {/* Tech Marquee */}
       <section className="relative z-10 border-y border-border/30 py-8">
         <Marquee pauseOnHover className="[--duration:30s]">
-          {TECH_STACK.map((tech) => (
-            <div key={tech} className="mx-4 flex items-center gap-2 text-sm text-muted-foreground">
+          {CLIENT_MARQUEE_NAMES.map((name) => (
+            <div key={name} className="mx-4 flex items-center gap-2 text-sm text-muted-foreground">
               <div className="h-1.5 w-1.5 rounded-full bg-primary/50" />
-              {tech}
+              {name}
             </div>
           ))}
         </Marquee>

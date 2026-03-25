@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
-import { BorderBeam } from "@/components/ui/border-beam";
 import { PixelCard } from "@/components/ui/pixel-card";
 
 interface StatusCardProps {
@@ -17,22 +16,16 @@ const severityStyles = {
     border: "border-border/50",
     glow: "",
     icon: "bg-primary/10 text-primary",
-    beamFrom: "#22c55e",
-    beamTo: "#06b6d4",
   },
   warning: {
     border: "border-status-warning/30",
     glow: "glow-yellow",
     icon: "bg-status-warning/10 text-status-warning",
-    beamFrom: "#eab308",
-    beamTo: "#f97316",
   },
   critical: {
     border: "border-status-critical/30",
     glow: "glow-red",
     icon: "bg-status-critical/10 text-status-critical",
-    beamFrom: "#ef4444",
-    beamTo: "#dc2626",
   },
 };
 
@@ -46,9 +39,6 @@ export function StatusCard({ title, value, subtitle, icon: Icon, severity = "nor
         s.glow,
       )}
     >
-      {severity !== "normal" && (
-        <BorderBeam size={60} duration={4} colorFrom={s.beamFrom} colorTo={s.beamTo} />
-      )}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{title}</p>
         <div className={cn("rounded-lg p-2", s.icon)}>

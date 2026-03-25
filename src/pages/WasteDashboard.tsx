@@ -5,7 +5,6 @@ import { CircularGauge } from "@/components/dashboard/CircularGauge";
 import { Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { BorderBeam } from "@/components/ui/border-beam";
 import { PixelCard } from "@/components/ui/pixel-card";
 
 export default function WasteDashboard() {
@@ -35,7 +34,6 @@ export default function WasteDashboard() {
       <div className="grid lg:grid-cols-3 gap-6">
         <BlurFade delay={0.15} className="lg:col-span-2">
           <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5">
-            <BorderBeam size={100} duration={12} colorFrom="#22c55e" colorTo="#10b981" />
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
               Bin Fill Levels

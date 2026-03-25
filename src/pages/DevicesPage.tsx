@@ -3,7 +3,6 @@ import { useDevices } from "@/hooks/useDevices";
 import type { IoTDevice } from "@/lib/api";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { BorderBeam } from "@/components/ui/border-beam";
 import { PixelCard } from "@/components/ui/pixel-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -256,7 +255,6 @@ export default function DevicesPage() {
 
       <BlurFade delay={0.15}>
         <PixelCard className="rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm p-5">
-          <BorderBeam size={100} duration={14} colorFrom="#22c55e" colorTo="#a855f7" />
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />

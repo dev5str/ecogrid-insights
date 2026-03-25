@@ -81,17 +81,18 @@ export const HOW_IT_WORKS_STEPS: {
   },
 ];
 
-export const TECH_STACK = [
-  "ESP32",
-  "Arduino",
-  "MQTT",
-  "Firebase",
-  "React",
-  "Ultrasonic Sensors",
-  "Flow Sensors",
-  "REST API",
-  "WebSocket",
-  "Cloud IoT",
-  "Tailwind",
-  "Recharts",
+/** Fictional institutions & sites for the trust marquee (not real endorsements). */
+export const CLIENT_MARQUEE_NAMES = [
+  "Riverside State University",
+  "Greenfield Polytechnic",
+  "Pacific Coast Medical Campus",
+  "Summit Business Park",
+  "Harborview Community College",
+  "Northlake Research Institute",
+  "Metro Civic Facilities",
+  "Evergreen Agricultural College",
+  "Lakeside Innovation District",
+  "Central Hospital Network",
+  "Oakwood Smart Campus",
+  "Skyline Energy Hub",
 ];

@@ -3,7 +3,6 @@ import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
 import { Zap, TrendingUp, Activity, Gauge } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { BorderBeam } from "@/components/ui/border-beam";
 import { PixelCard } from "@/components/ui/pixel-card";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -40,7 +39,6 @@ export default function ElectricityDashboard() {
       <div className="grid lg:grid-cols-3 gap-6">
         <BlurFade delay={0.15} className="lg:col-span-2">
           <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5">
-            <BorderBeam size={100} duration={12} colorFrom="#eab308" colorTo="#f97316" />
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse" />
               Power Consumption — Time Series

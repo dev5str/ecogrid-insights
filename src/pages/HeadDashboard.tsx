@@ -5,7 +5,6 @@ import { Zap, Droplets, Trash2, Activity, Server, Wifi } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { BorderBeam } from "@/components/ui/border-beam";
 import { PixelCard } from "@/components/ui/pixel-card";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -55,7 +54,6 @@ export default function HeadDashboard() {
           <StatusCard title="Total Alerts Today" value={allAlerts.length} icon={Activity} severity={allAlerts.length > 20 ? "warning" : "normal"} subtitle="Across all modules" />
 
           <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5 flex flex-col gap-2">
-            <BorderBeam size={60} duration={10} colorFrom="#a855f7" colorTo="#ec4899" />
             <p className="text-sm text-muted-foreground">Quick Access</p>
             <div className="flex flex-col gap-1.5 mt-1">
               <Link to="/dashboard/electricity"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs hover:bg-yellow-500/10 hover:text-yellow-400"><Zap className="h-3.5 w-3.5" /> Electricity</Button></Link>
@@ -69,7 +67,6 @@ export default function HeadDashboard() {
       <div className="grid lg:grid-cols-3 gap-6">
         <BlurFade delay={0.2} className="lg:col-span-2">
           <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5">
-            <BorderBeam size={100} duration={14} colorFrom="#a855f7" colorTo="#22c55e" />
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               Comparative Analytics

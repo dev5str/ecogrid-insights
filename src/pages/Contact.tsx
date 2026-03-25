@@ -1,15 +1,12 @@
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Mail, MapPin, Phone, Globe, Wifi, Server, Cpu } from "lucide-react";
+import { Mail, MapPin, Phone, Globe, Wifi, Server, Cpu } from "lucide-react";
 import { toast } from "sonner";
-import { DotPattern } from "@/components/ui/dot-pattern";
 import { BlurFade } from "@/components/ui/blur-fade";
-import { BorderBeam } from "@/components/ui/border-beam";
-import { PlasmaPageBackground } from "@/components/ui/plasma-background";
 import { PixelCard } from "@/components/ui/pixel-card";
 import { EcoGridLogo } from "@/components/brand/EcoGridLogo";
+import { MarketingLayout } from "@/components/marketing/MarketingLayout";
 
 export default function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
@@ -18,17 +15,10 @@ export default function Contact() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background/30 p-4 md:p-8">
-      <PlasmaPageBackground />
-
-      <div className="mx-auto max-w-5xl relative z-10">
-        <BlurFade delay={0.05}>
-          <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" /> Back to Home
-          </Link>
-        </BlurFade>
-
-        <BlurFade delay={0.1}>
+    <MarketingLayout>
+      <section className="relative z-10 px-4 pb-24 pt-32 md:px-8">
+        <div className="mx-auto max-w-5xl">
+          <BlurFade delay={0.1}>
           <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start">
             <EcoGridLogo className="h-14 w-14 shrink-0 rounded-2xl" />
             <div>
@@ -37,12 +27,11 @@ export default function Contact() {
               <p className="text-muted-foreground text-lg">Get in touch or configure your EcoGrid deployment.</p>
             </div>
           </div>
-        </BlurFade>
+          </BlurFade>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <BlurFade delay={0.15}>
+          <div className="grid md:grid-cols-2 gap-8">
+            <BlurFade delay={0.15}>
             <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm">
-              <BorderBeam size={80} duration={10} colorFrom="#22c55e" colorTo="#06b6d4" />
               <div className="p-6">
                 <h2 className="text-lg font-semibold mb-1">Send a Message</h2>
                 <p className="text-sm text-muted-foreground mb-6">We'll respond within 24 hours.</p>
@@ -55,9 +44,9 @@ export default function Contact() {
                 </form>
               </div>
             </PixelCard>
-          </BlurFade>
+            </BlurFade>
 
-          <div className="space-y-6">
+            <div className="space-y-6">
             <BlurFade delay={0.2}>
               <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm">
                 <div className="p-6 space-y-5">
@@ -78,9 +67,9 @@ export default function Contact() {
                   ))}
                 </div>
               </PixelCard>
-            </BlurFade>
+              </BlurFade>
 
-            <BlurFade delay={0.25}>
+              <BlurFade delay={0.25}>
               <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm">
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-4">
@@ -102,10 +91,11 @@ export default function Contact() {
                   </ul>
                 </div>
               </PixelCard>
-            </BlurFade>
+              </BlurFade>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </MarketingLayout>
   );
 }
