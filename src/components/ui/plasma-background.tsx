@@ -9,7 +9,7 @@ export function PlasmaPageBackground() {
     >
       <Plasma
         color="#22c55e"
-        speed={1.3}
+        speed={1}
         direction="forward"
         scale={1.2}
         opacity={0.8}

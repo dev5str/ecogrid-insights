@@ -22,7 +22,7 @@ export default function Contact() {
           <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start">
             <EcoGridLogo className="h-14 w-14 shrink-0 rounded-2xl" />
             <div>
-              <p className="text-sm font-medium text-primary mb-2">CONTACT US</p>
+              <p className="text-sm font-medium text-white mb-2">CONTACT US</p>
               <h1 className="text-4xl font-bold mb-2">Contact & Admin Setup</h1>
               <p className="text-muted-foreground text-lg">Get in touch or configure your EcoGrid deployment.</p>
             </div>
@@ -51,8 +51,8 @@ export default function Contact() {
               <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm">
                 <div className="p-6 space-y-5">
                   {[
-                    { icon: Mail, label: "Email", value: "admin@ecogrid.io" },
-                    { icon: Phone, label: "Phone", value: "+1 (555) 234-5678" },
+                    { icon: Mail, label: "Email", value: "hello@gebsill.com" },
+                    { icon: Phone, label: "Phone", value: "+91 7010306243" },
                     { icon: MapPin, label: "Location", value: "Campus IoT Lab, Building 7" },
                   ].map((c) => (
                     <div key={c.label} className="flex items-center gap-4">

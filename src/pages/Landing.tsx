@@ -36,7 +36,7 @@ export default function Landing() {
                 Smart campus intelligence
               </span>
               <span className="mt-2 block text-lg font-medium text-muted-foreground md:text-xl">
-                Electricity · water · waste
+                Electricity · Water · Waste
               </span>
             </h1>
           </BlurFade>
