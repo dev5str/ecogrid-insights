@@ -183,12 +183,14 @@ For **ESP32**, use **WiFiClient** or **PubSubClient** (MQTT) or **HTTPClient** t
 
 ### 5.8 Connecting this UI to real waste data
 
-Today, **`useWasteData`** in `useSimulatedData.ts` **generates random fill levels**. To use real data you would:
+**Waste dashboard (`/dashboard/waste`)** uses **`useFirebaseWasteData`** (`src/hooks/useFirebaseWasteData.ts`) with **Firestore**:
 
-1. Run a **backend** that stores readings from your microcontrollers.  
-2. Either replace `useWasteData` with **React Query** + `deviceApi.getDeviceReadings` / WebSocket, or merge API data into the same `WasteBin[]` shape (`id`, `zone`, `fillLevel`, `lastCollected`).  
+- Collection **`bins`**: documents with fill fields such as `fillLevel`, `level`, `value`, or `percentage`; optional `zone`, `location`, `name`, `lastCollected`, etc.  
+- Collection **`alerts`**: waste-related docs (`module: "waste"` or bin-style fields) drive the alert feed.
 
-Until then, **waste dashboards are demonstrative only**.
+Firebase is initialized in **`src/lib/firebase.ts`** (same project as branch `origin/bin`).
+
+**Head dashboard** still uses **`useWasteData`** from **`useSimulatedData.ts`** for a consolidated **simulated** waste summary alongside electricity and water.
 
 ---
 

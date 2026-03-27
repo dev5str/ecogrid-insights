@@ -1,4 +1,4 @@
-import { useWasteData } from "@/hooks/useSimulatedData";
+import { useFirebaseWasteData } from "@/hooks/useFirebaseWasteData";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
 import { CircularGauge } from "@/components/dashboard/CircularGauge";
@@ -8,7 +8,7 @@ import { BlurFade } from "@/components/ui/blur-fade";
 import { PixelCard } from "@/components/ui/pixel-card";
 
 export default function WasteDashboard() {
-  const { bins, alerts, criticalBins, warningBins, normalBins } = useWasteData();
+  const { bins, alerts, criticalBins, warningBins, normalBins } = useFirebaseWasteData();
 
   return (
     <div className="space-y-6">
