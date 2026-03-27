@@ -9,9 +9,9 @@ export function PlasmaPageBackground() {
     >
       <Plasma
         color="#22c55e"
-        speed={0.6}
+        speed={1.3}
         direction="forward"
-        scale={1.1}
+        scale={1.2}
         opacity={0.8}
         mouseInteractive={false}
         maxDpr={1}
