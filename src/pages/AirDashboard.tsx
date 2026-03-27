@@ -1,0 +1,204 @@
+import { useEffect, useMemo, useState } from "react";
+import { Wind, Droplets, Thermometer, ShieldAlert, Gauge } from "lucide-react";
+import GaugeComponent from "react-gauge-component";
+import { BlurFade } from "@/components/ui/blur-fade";
+import { PixelCard } from "@/components/ui/pixel-card";
+import { StatusCard } from "@/components/dashboard/StatusCard";
+
+type AirStatus = "Good" | "Moderate" | "Dangerous";
+
+interface AirReading {
+  gas: number;
+  humidity: number;
+  temperature: number;
+  status: AirStatus;
+}
+
+function getStatus(gas: number): AirStatus {
+  if (gas > 450) return "Dangerous";
+  if (gas > 300) return "Moderate";
+  return "Good";
+}
+
+function clamp(num: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, num));
+}
+
+function randomDelayMs() {
+  return 3000 + Math.floor(Math.random() * 2000);
+}
+
+const MAX_GAS_PPM = 600;
+
+function describeStatus(status: AirStatus) {
+  if (status === "Dangerous") return "critical";
+  if (status === "Moderate") return "warning";
+  return "normal";
+}
+
+export default function AirDashboard() {
+  const [reading, setReading] = useState<AirReading>(() => {
+    const gas = 265;
+    return {
+      gas,
+      humidity: 49,
+      temperature: 28.1,
+      status: getStatus(gas),
+    };
+  });
+
+  useEffect(() => {
+    let timeoutId: number | undefined;
+    let stopped = false;
+
+    const tick = () => {
+      if (stopped) return;
+      setReading((prev) => {
+        const gas = Math.round(clamp(prev.gas + (Math.random() * 120 - 60), 120, 560));
+        const humidity = Number(clamp(prev.humidity + (Math.random() * 6 - 3), 30, 85).toFixed(1));
+        const temperature = Number(
+          clamp(prev.temperature + (Math.random() * 1.6 - 0.8), 18, 42).toFixed(1),
+        );
+        return {
+          gas,
+          humidity,
+          temperature,
+          status: getStatus(gas),
+        };
+      });
+      timeoutId = window.setTimeout(tick, randomDelayMs());
+    };
+
+    timeoutId = window.setTimeout(tick, randomDelayMs());
+    return () => {
+      stopped = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  const severity = useMemo(() => describeStatus(reading.status), [reading.status]);
+  const normalizedGaugeValue = useMemo(() => clamp(reading.gas / MAX_GAS_PPM, 0, 1), [reading.gas]);
+  const airGaugeProps: any = {
+    value: normalizedGaugeValue,
+    type: "semicircle",
+    minValue: 0,
+    maxValue: 1,
+    arc: {
+      width: 1,
+      cornerRadius: 44,
+      nbSubArcs: 9,
+      colorArray: ["#5BE12C", "#F5CD19", "#EA4228"],
+      padding: 0.03,
+      subArcsStrokeWidth: 1,
+      subArcsStrokeColor: "#5e5c64",
+      effects: {
+        glow: true,
+        glowSpread: 0.6,
+        glowBlur: 11,
+        dropShadow: { dy: 2, blur: 9, opacity: 0.6 },
+      },
+      subArcs: [],
+      gradient: false,
+    },
+    pointer: {
+      type: "needle",
+      baseColor: "#000000",
+      strokeWidth: 1,
+      strokeColor: "#5e5c64",
+      maxFps: 30,
+      color: "#000000",
+      length: 0.7,
+      width: 27,
+      animationDuration: 2700,
+      animationDelay: 200,
+    },
+    labels: {
+      valueLabel: {
+        matchColorWithArc: false,
+        style: { fontSize: "12px", fontWeight: "bold" },
+        hide: true,
+        animateValue: true,
+      },
+      tickLabels: {
+        type: "outer",
+        ticks: [],
+        hideMinMax: true,
+      },
+    },
+  };
+
+  return (
+    <div className="space-y-6">
+      <BlurFade delay={0.05}>
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
+            <Wind className="h-6 w-6 text-primary" />
+            Air Purifier Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Real-time indoor air quality simulation using MQ135 + DHT-style readings
+          </p>
+        </div>
+      </BlurFade>
+
+      <BlurFade delay={0.1}>
+        <PixelCard className="rounded-xl border border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+            Gas Concentration Gauge
+          </h3>
+          <div className="relative mx-auto w-full max-w-[420px]">
+            <GaugeComponent {...airGaugeProps} />
+          </div>
+          <div className="mt-2 text-center">
+            <p className="text-2xl font-bold text-foreground">{reading.gas} PPM</p>
+            <p className="mt-1 text-sm text-muted-foreground">MQ135 Gas Level</p>
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-3 text-xs text-muted-foreground">
+            <span>0 PPM</span>
+            <span className="rounded-full bg-secondary px-2 py-1">Moderate {">"} 300</span>
+            <span className="rounded-full bg-secondary px-2 py-1">Dangerous {">"} 450</span>
+            <span>{MAX_GAS_PPM} PPM</span>
+          </div>
+        </PixelCard>
+      </BlurFade>
+
+      <BlurFade delay={0.15}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatusCard title="Gas Level" value={`${reading.gas} PPM`} icon={Gauge} severity={severity} subtitle="MQ135 simulated" />
+          <StatusCard title="Humidity" value={`${reading.humidity}%`} icon={Droplets} subtitle="DHT simulated" />
+          <StatusCard title="Temperature" value={`${reading.temperature}°C`} icon={Thermometer} subtitle="DHT simulated" />
+          <StatusCard title="Air Status" value={reading.status} icon={ShieldAlert} severity={severity} subtitle="Computed from gas value" />
+        </div>
+      </BlurFade>
+
+      <BlurFade delay={0.2}>
+        <PixelCard className="rounded-xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm">
+          <h3 className="mb-3 text-sm font-semibold">Alerts</h3>
+          {reading.gas > 450 ? (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+              <p className="font-medium text-red-400">Dangerous air quality detected</p>
+              <p className="mt-1 text-sm text-red-200/80">
+                Gas concentration is {reading.gas} PPM. Increase ventilation and inspect purifier filters immediately.
+              </p>
+            </div>
+          ) : reading.gas > 300 ? (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+              <p className="font-medium text-amber-400">Moderate pollution warning</p>
+              <p className="mt-1 text-sm text-amber-100/80">
+                Gas concentration is {reading.gas} PPM. Air quality is declining; monitor purifier performance.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4">
+              <p className="font-medium text-green-400">Air quality is good</p>
+              <p className="mt-1 text-sm text-green-100/80">
+                Gas concentration is {reading.gas} PPM. No action required.
+              </p>
+            </div>
+          )}
+        </PixelCard>
+      </BlurFade>
+    </div>
+  );
+}
