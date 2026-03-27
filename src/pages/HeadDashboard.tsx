@@ -31,11 +31,11 @@ export default function HeadDashboard() {
     <div className="space-y-6">
       <BlurFade delay={0.05}>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Activity className="h-6 w-6 text-primary" />
             Master Control Panel
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Consolidated overview of all environmental modules</p>
+          <p className="text-base text-muted-foreground mt-1">Consolidated overview of all environmental modules</p>
         </div>
       </BlurFade>
 
@@ -54,11 +54,11 @@ export default function HeadDashboard() {
           <StatusCard title="Total Alerts Today" value={allAlerts.length} icon={Activity} severity={allAlerts.length > 20 ? "warning" : "normal"} subtitle="Across all modules" />
 
           <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5 flex flex-col gap-2">
-            <p className="text-sm text-muted-foreground">Quick Access</p>
+            <p className="text-base text-muted-foreground">Quick Access</p>
             <div className="flex flex-col gap-1.5 mt-1">
-              <Link to="/dashboard/electricity"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs hover:bg-yellow-500/10 hover:text-yellow-400"><Zap className="h-3.5 w-3.5" /> Electricity</Button></Link>
-              <Link to="/dashboard/water"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs hover:bg-blue-500/10 hover:text-blue-400"><Droplets className="h-3.5 w-3.5" /> Water</Button></Link>
-              <Link to="/dashboard/waste"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs hover:bg-green-500/10 hover:text-green-400"><Trash2 className="h-3.5 w-3.5" /> Waste</Button></Link>
+              <Link to="/dashboard/electricity"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm hover:bg-yellow-500/10 hover:text-yellow-400"><Zap className="h-3.5 w-3.5" /> Electricity</Button></Link>
+              <Link to="/dashboard/water"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm hover:bg-blue-500/10 hover:text-blue-400"><Droplets className="h-3.5 w-3.5" /> Water</Button></Link>
+              <Link to="/dashboard/waste"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm hover:bg-green-500/10 hover:text-green-400"><Trash2 className="h-3.5 w-3.5" /> Waste</Button></Link>
             </div>
           </PixelCard>
         </div>
@@ -67,21 +67,21 @@ export default function HeadDashboard() {
       <div className="grid lg:grid-cols-3 gap-6">
         <BlurFade delay={0.2} className="lg:col-span-2">
           <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5">
-            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+            <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               Comparative Analytics
             </h3>
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={comparativeData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 14%)" />
-                <XAxis dataKey="time" stroke="hsl(215 15% 50%)" tick={{ fontSize: 11 }} />
-                <YAxis stroke="hsl(215 15% 50%)" tick={{ fontSize: 11 }} />
+                <XAxis dataKey="time" stroke="hsl(215 15% 50%)" tick={{ fontSize: 13 }} />
+                <YAxis stroke="hsl(215 15% 50%)" tick={{ fontSize: 13 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(220 20% 7%)",
                     border: "1px solid hsl(220 14% 14%)",
                     borderRadius: "10px",
-                    fontSize: 12,
+                    fontSize: 14,
                   }}
                 />
                 <Legend />

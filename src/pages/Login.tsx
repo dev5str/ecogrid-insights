@@ -48,7 +48,7 @@ export default function Login() {
 
       <div className="w-full max-w-lg relative z-10">
         <BlurFade delay={0.1}>
-          <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm text-white hover:text-white/80 transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back to Home
           </Link>
         </BlurFade>

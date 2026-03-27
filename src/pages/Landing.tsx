@@ -36,7 +36,7 @@ export default function Landing() {
                 Smart campus intelligence
               </span>
               <span className="mt-2 block text-lg font-medium text-muted-foreground md:text-xl">
-                Electricity · water · waste - one dashboard
+                Electricity · water · waste
               </span>
             </h1>
           </BlurFade>
@@ -49,7 +49,7 @@ export default function Landing() {
           </BlurFade>
 
           <BlurFade delay={0.4} inView>
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-5">
+            <div className="mt-12 flex flex-col items-center justify-center gap-4">
               <Link to="/login">
                 <ShimmerButton
                   shimmerColor="#22c55e"
