@@ -1,4 +1,4 @@
-/** Same asset as `<link rel="icon" href="/favicon.svg" />` in `index.html`. */
-export const ECOGRID_LOGO_SRC = "/favicon.svg";
+/** Primary mark: `public/logo/logoec.png`. Favicon: `public/favicon.ico` (see `index.html`). */
+export const ECOGRID_LOGO_SRC = "/logo/logoec.png";
 
 export const ECOGRID_LOGO_ALT = "EcoGrid";

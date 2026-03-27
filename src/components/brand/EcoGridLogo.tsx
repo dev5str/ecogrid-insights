@@ -6,7 +6,7 @@ export type EcoGridLogoProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, "
   alt?: string;
 };
 
-/** Site mark: same SVG as the favicon (`public/favicon.svg`). */
+/** Site mark: `public/logo/logoec.png` (see `ECOGRID_LOGO_SRC`). */
 export function EcoGridLogo({ className, alt, ...props }: EcoGridLogoProps) {
   return (
     <img
