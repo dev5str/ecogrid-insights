@@ -18,6 +18,7 @@ import WaterDashboard from "./pages/WaterDashboard";
 import WasteDashboard from "./pages/WasteDashboard";
 import HeadDashboard from "./pages/HeadDashboard";
 import DevicesPage from "./pages/DevicesPage";
+import AirDashboard from "./pages/AirDashboard";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,16 @@ const App = () => (
               <Route path="waste" element={<WasteDashboard />} />
               <Route path="head" element={<HeadDashboard />} />
               <Route path="devices" element={<DevicesPage />} />
+            </Route>
+            <Route
+              path="/air"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AirDashboard />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

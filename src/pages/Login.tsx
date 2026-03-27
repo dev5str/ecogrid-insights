@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-import { Zap, Droplets, Trash2, Crown, ArrowLeft } from "lucide-react";
+import { Zap, Droplets, Trash2, Crown, Wind, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlasmaPageBackground } from "@/components/ui/plasma-background";
 import { PixelCard } from "@/components/ui/pixel-card";
@@ -19,6 +19,7 @@ const roles: {
   { role: "electricity", label: "Electricity Admin", icon: Zap, desc: "Monitor power consumption across campus", pixelColors: ["#422006", "#713f12", "#ca8a04", "#f97316"] },
   { role: "water", label: "Water Admin", icon: Droplets, desc: "Track water usage and detect leaks", pixelColors: ["#172554", "#1e40af", "#2563eb", "#06b6d4"] },
   { role: "waste", label: "Waste Admin", icon: Trash2, desc: "Manage waste bins and collection", pixelColors: ["#052e16", "#14532d", "#22c55e", "#10b981"] },
+  { role: "air", label: "Air Purifier Admin", icon: Wind, desc: "Monitor air quality and purifier status", pixelColors: ["#0c4a6e", "#0369a1", "#0ea5e9", "#38bdf8"] },
   { role: "head", label: "Head User", icon: Crown, desc: "Master control panel : all modules", pixelColors: ["#3b0764", "#6b21a8", "#a855f7", "#ec4899"] },
 ];
 
@@ -26,6 +27,7 @@ const dashboardRoutes: Record<UserRole, string> = {
   electricity: "/dashboard/electricity",
   water: "/dashboard/water",
   waste: "/dashboard/waste",
+  air: "/air",
   head: "/dashboard/head",
 };
 

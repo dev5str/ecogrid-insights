@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Environment";
+  src: url("/font/environment.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Belgan Aesthetic";
+  src: url("/font/Belgan%20Aesthetic.ttf") format("truetype");
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --background: 220 20% 4%;
@@ -62,7 +74,16 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: "Belgan Aesthetic", "Inter", system-ui, -apple-system, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Environment", "Belgan Aesthetic", "Inter", system-ui, -apple-system, sans-serif;
   }
 
   ::-webkit-scrollbar {

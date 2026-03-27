@@ -21,7 +21,11 @@ export function TopBar() {
     navigate("/");
   };
 
-  const homePath = user ? `/dashboard/${user.role}` : "/";
+  const homePath = user
+    ? user.role === "air"
+      ? "/air"
+      : `/dashboard/${user.role}`
+    : "/";
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/30 glass-strong px-4">

@@ -26,6 +26,12 @@ This repo is configured for [Vercel](https://vercel.com): `pnpm` install, `vite 
 3. Leave defaults (or confirm **Install Command** `pnpm install --frozen-lockfile`, **Build Command** `pnpm run build`, **Output Directory** `dist`).
 4. Deploy.
 
-## IoT Integration
+    ## Documentation
 
-The dashboard exposes REST and WebSocket endpoints for connecting ESP32/Arduino devices. See the **Devices** page in the dashboard for full API documentation.
+**Full project documentation** : architecture, what is simulated vs real, API stubs, and a **detailed Arduino + ultrasonic waste-bin guide** : is in:
+
+**[docs/ECOGRID-DOCUMENTATION.md](docs/ECOGRID-DOCUMENTATION.md)**
+
+## IoT integration
+
+The dashboard UI is wired to **client-side API stubs** (`src/lib/api.ts`) for future REST/WebSocket backends. The **Devices** page lists example endpoints. **Electricity and water** in the app are **simulations**; **waste fill levels** are **simulated** until you connect real hardware and a backend : see the doc above for hardware and calibration.

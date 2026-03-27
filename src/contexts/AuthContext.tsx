@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 
-export type UserRole = "electricity" | "water" | "waste" | "head";
+export type UserRole = "electricity" | "water" | "waste" | "air" | "head";
 
 export interface User {
   id: string;
@@ -21,6 +21,7 @@ const roleProfiles: Record<UserRole, { name: string }> = {
   electricity: { name: "Electricity Admin" },
   water: { name: "Water Admin" },
   waste: { name: "Waste Management Admin" },
+  air: { name: "Air Purifier Admin" },
   head: { name: "Head User" },
 };
 
