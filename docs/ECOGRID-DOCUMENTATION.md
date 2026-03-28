@@ -182,10 +182,9 @@ Devices are **demo state** in memory. `deviceApi` targets `/api/v1/...` and retu
 - **Page:** `src/pages/SustainabilityInsightsPage.tsx`
 - **Metrics:** Driven by sustainability simulation hooks and UI state (leaderboard, carbon story, etc.).
 - **CSV:** `src/lib/csvExport.ts` (and related helpers) for downloadable extracts where exposed in the UI.
-- **Compliance narrative:** `src/lib/geminiComplianceReport.ts` (name is historical) calls **Ollama** via `src/lib/ollamaEndpointSettings.ts` (`resolveOllamaChatUrl`):
-  - **Browser override (any environment):** Sustainability → **Compliance** tab → **Ollama API base URL** saves an **https** (or http) **origin** in **`localStorage`** (e.g. ngrok or Cloudflare Tunnel to port 11434). That wins over the dev proxy and `VITE_OLLAMA_URL`. Append **`/api/chat`** in code only; do not paste `/api/chat` in the field.
-  - **Development (no override):** `POST /api/ollama/api/chat` → Vite proxy → `OLLAMA_HOST` or `VITE_OLLAMA_URL` or `http://127.0.0.1:11434`
-  - **Production build (no override):** `POST {VITE_OLLAMA_URL}/api/chat` (default base `http://127.0.0.1:11434` if unset)
+- **Compliance narrative:** `src/lib/geminiComplianceReport.ts` (name is historical) calls **Ollama** via `ollamaEndpointSettings` and optional **`/api/ollama-forward`**:
+  - **Tunnel URL in browser (`localStorage`):** The app does **not** call ngrok from the browser (avoids CORS). It **`POST`s to same-origin `/api/ollama-forward`** with `{ baseUrl, chat }`. **Dev:** Vite middleware (`vite.config.ts`) forwards to `{baseUrl}/api/chat`. **Prod:** `api/ollama-forward.ts` on Vercel does the same. Use **`pnpm dev`** locally so the middleware exists (`vite preview` has no forward route).
+  - **No tunnel override:** **Development:** `POST /api/ollama/api/chat` → Vite proxy → local Ollama. **Production:** `POST {VITE_OLLAMA_URL}/api/chat` (still subject to CORS unless Ollama allows the site origin).
   - **Model:** `VITE_OLLAMA_MODEL` or default **`llava`**
 - **Print / PDF:** `src/lib/compliancePrint.ts` opens a print window with escaped HTML. The **Source** line was removed from the AI-assisted template; narrative text is passed through `stripNarrativeForPrint` to remove leading `## ` and `- ` prefixes per line for cleaner print output.
 

@@ -9,7 +9,12 @@
  *
  * Optional `.env.local`: `VITE_OLLAMA_MODEL=llava`, `OLLAMA_HOST=...` for the dev proxy target.
  */
-import { resolveOllamaChatUrl } from "@/lib/ollamaEndpointSettings";
+import {
+  getOllamaBaseUrlOverride,
+  isValidOllamaBaseUrl,
+  resolveOllamaChatUrl,
+} from "@/lib/ollamaEndpointSettings";
+import { normalizeOllamaBaseUrl } from "@/lib/ollamaForwardShared";
 
 function normalizeEnvValue(raw: string | undefined): string {
   let s = (raw ?? "").trim();
@@ -76,23 +81,53 @@ function headersForOllamaRequest(url: string): Record<string, string> {
 
 export async function fetchGeminiComplianceNarrative(metrics: GeminiComplianceMetrics): Promise<string> {
   const prompt = buildPrompt(metrics);
-  const url = resolveOllamaChatUrl();
+  const chatBody = {
+    model: OLLAMA_MODEL,
+    messages: [{ role: "user", content: prompt }],
+    stream: false,
+    options: {
+      temperature: 0.35,
+      num_predict: 4096,
+    },
+  };
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: headersForOllamaRequest(url),
-    body: JSON.stringify({
-      model: OLLAMA_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      stream: false,
-      options: {
-        temperature: 0.35,
-        num_predict: 4096,
-      },
-    }),
-  });
+  const tunnelBase = normalizeOllamaBaseUrl(getOllamaBaseUrlOverride());
+  const useForwardProxy = Boolean(tunnelBase && isValidOllamaBaseUrl(tunnelBase));
 
-  const raw = (await res.json()) as OllamaChatResponse & { message?: { content?: string } };
+  let res: Response;
+  try {
+    if (useForwardProxy) {
+      res = await fetch(new URL("/api/ollama-forward", window.location.origin).toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ baseUrl: tunnelBase, chat: chatBody }),
+      });
+    } else {
+      const url = resolveOllamaChatUrl();
+      res = await fetch(url, {
+        method: "POST",
+        headers: headersForOllamaRequest(url),
+        body: JSON.stringify(chatBody),
+      });
+    }
+  } catch (e) {
+    const hint = useForwardProxy
+      ? "Tunnel requests use this app’s /api/ollama-forward proxy. On localhost use pnpm dev (not vite preview). On Vercel, deploy with the api/ollama-forward serverless route."
+      : "If this is a CORS error, save your ngrok URL in Sustainability → Compliance (uses same-origin proxy) or set OLLAMA_ORIGINS on Ollama.";
+    throw new Error(
+      `Network error: ${e instanceof Error ? e.message : String(e)}. ${hint}`,
+    );
+  }
+
+  const responseText = await res.text();
+  let raw: OllamaChatResponse & { message?: { content?: string } };
+  try {
+    raw = JSON.parse(responseText) as OllamaChatResponse & { message?: { content?: string } };
+  } catch {
+    throw new Error(
+      `Ollama returned non-JSON (HTTP ${res.status}): ${responseText.slice(0, 280)}`,
+    );
+  }
 
   if (!res.ok) {
     const msg = typeof raw.error === "string" ? raw.error : res.statusText;

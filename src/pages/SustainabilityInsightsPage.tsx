@@ -322,10 +322,12 @@ export default function SustainabilityInsightsPage() {
                   Ollama API base URL
                 </h3>
                 <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-                  Optional. Paste the <strong>origin only</strong> for a tunnel that forwards to Ollama (port 11434), e.g.{" "}
-                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">https://abc123.ngrok-free.app</code> or your Cloudflare Tunnel URL. Do{" "}
-                  <strong>not</strong> add <code className="text-[11px]">/api/chat</code>. Stored in <code className="text-[11px]">localStorage</code> for this browser only.
-                  On the tunnel host, set <code className="text-[11px]">OLLAMA_ORIGINS</code> to allow your site origin for CORS.
+                  Optional. Paste the <strong>origin only</strong> for a tunnel to Ollama (port 11434), e.g.{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">https://abc123.ngrok-free.app</code>. Do <strong>not</strong> add{" "}
+                  <code className="text-[11px]">/api/chat</code>. Stored in <code className="text-[11px]">localStorage</code>. When this is set, the app calls{" "}
+                  <strong>same-origin</strong> <code className="text-[11px]">/api/ollama-forward</code> (Vite dev middleware or Vercel serverless), which forwards to your
+                  tunnel, so the browser avoids CORS errors. Use <code className="text-[11px]">pnpm dev</code> locally (not <code className="text-[11px]">vite preview</code>) so
+                  the dev proxy exists.
                 </p>
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
                   <div className="min-w-0 flex-1 space-y-1.5">
@@ -353,9 +355,14 @@ export default function SustainabilityInsightsPage() {
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground/80">Requests go to:</span>{" "}
+                  <span className="font-medium text-foreground/80">Tunnel target (forwarded server-side):</span>{" "}
                   <span className="break-all font-mono text-foreground/90">{ollamaEffectiveBase}</span>
                   <span className="font-mono text-muted-foreground">/api/chat</span>
+                  {ollamaUrlDraft.trim() ? (
+                    <span className="mt-1 block font-mono text-[11px] text-muted-foreground">
+                      Browser → {typeof window !== "undefined" ? window.location.origin : ""}/api/ollama-forward → tunnel
+                    </span>
+                  ) : null}
                 </p>
               </div>
             </PixelCard>
