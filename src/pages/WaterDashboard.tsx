@@ -1,8 +1,10 @@
 import { useWaterData } from "@/hooks/useSimulatedData";
 import { useSystemPower } from "@/contexts/SystemPowerContext";
+import { useZoneTelemetry } from "@/hooks/useZoneTelemetry";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
 import { SystemModuleOffline } from "@/components/dashboard/SystemModuleOffline";
+import { ZoneBreakdown } from "@/components/dashboard/ZoneBreakdown";
 import { Droplets, AlertTriangle, Activity, Waves } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { PixelCard } from "@/components/ui/pixel-card";
@@ -15,6 +17,7 @@ export default function WaterDashboard() {
   const { isOn } = useSystemPower();
   const powered = isOn("water");
   const { data, alerts, currentFlow, anomalyCount } = useWaterData({ enabled: powered });
+  const zoneFlow = useZoneTelemetry("water", powered);
 
   const severity =
     currentFlow > 75 || currentFlow < 18 ? "critical" : currentFlow > 60 ? "warning" : "normal";
@@ -45,6 +48,18 @@ export default function WaterDashboard() {
           <StatusCard title="Active Sensors" value="32" icon={Activity} subtitle="All zones" />
           <StatusCard title="Daily Usage" value="12,450 L" icon={Waves} subtitle="Today's total" />
         </div>
+      </BlurFade>
+
+      <BlurFade delay={0.12}>
+        <ZoneBreakdown
+          title="Flow by campus zone"
+          subtitle="Main risers and wings — simulated L/min (segmented flow view)"
+          unit="L/m"
+          accentClass="bg-blue-400"
+          mode="segmented"
+          segmentScaleMax={90}
+          zones={zoneFlow.map((z) => ({ zone: z.zone, value: z.value }))}
+        />
       </BlurFade>
 
       <div className="grid lg:grid-cols-3 gap-6">

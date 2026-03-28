@@ -6,6 +6,8 @@ import GaugeComponent from "react-gauge-component";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { PixelCard } from "@/components/ui/pixel-card";
 import { StatusCard } from "@/components/dashboard/StatusCard";
+import { ZoneBreakdown } from "@/components/dashboard/ZoneBreakdown";
+import { useZoneTelemetry } from "@/hooks/useZoneTelemetry";
 
 type AirStatus = "Good" | "Moderate" | "Dangerous";
 
@@ -81,6 +83,8 @@ export default function AirDashboard() {
       if (timeoutId) window.clearTimeout(timeoutId);
     };
   }, [powered]);
+
+  const zoneAir = useZoneTelemetry("air", powered);
 
   const severity = useMemo(() => describeStatus(reading.status), [reading.status]);
   const normalizedGaugeValue = useMemo(() => clamp(reading.gas / MAX_GAS_PPM, 0, 1), [reading.gas]);
@@ -174,6 +178,18 @@ export default function AirDashboard() {
             <span>{MAX_GAS_PPM} PPM</span>
           </div>
         </PixelCard>
+      </BlurFade>
+
+      <BlurFade delay={0.14}>
+        <ZoneBreakdown
+          title="Air quality by zone"
+          subtitle="MQ135-style gas PPM — per campus zone (simulated, segmented view)"
+          unit="ppm"
+          accentClass="bg-sky-400"
+          mode="segmented"
+          segmentScaleMax={MAX_GAS_PPM}
+          zones={zoneAir.map((z) => ({ zone: z.zone, value: z.value }))}
+        />
       </BlurFade>
 
       <BlurFade delay={0.15}>

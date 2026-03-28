@@ -3,7 +3,7 @@ import { useElectricityData, useWaterData, useWasteData } from "@/hooks/useSimul
 import { useSystemPower } from "@/contexts/SystemPowerContext";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
-import { Zap, Droplets, Trash2, Activity, Server, Wifi } from "lucide-react";
+import { Zap, Droplets, Trash2, Activity, Server, Wifi, Leaf, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BlurFade } from "@/components/ui/blur-fade";
@@ -69,6 +69,8 @@ export default function HeadDashboard() {
           <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5 flex flex-col gap-2">
             <p className="text-base text-muted-foreground">Quick Access</p>
             <div className="flex flex-col gap-1.5 mt-1">
+              <Link to="/dashboard/sustainability"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm hover:bg-emerald-500/10 hover:text-emerald-400"><Leaf className="h-3.5 w-3.5" /> Eco score &amp; exports</Button></Link>
+              <Link to="/dashboard/campus"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm hover:bg-sky-500/10 hover:text-sky-400"><Users className="h-3.5 w-3.5" /> Campus engagement</Button></Link>
               <Link to="/dashboard/electricity"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm hover:bg-yellow-500/10 hover:text-yellow-400"><Zap className="h-3.5 w-3.5" /> Electricity</Button></Link>
               <Link to="/dashboard/water"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm hover:bg-blue-500/10 hover:text-blue-400"><Droplets className="h-3.5 w-3.5" /> Water</Button></Link>
               <Link to="/dashboard/waste"><Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sm hover:bg-green-500/10 hover:text-green-400"><Trash2 className="h-3.5 w-3.5" /> Waste</Button></Link>

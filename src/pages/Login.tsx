@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-import { Zap, Droplets, Trash2, Crown, Wind, ArrowLeft } from "lucide-react";
+import { Zap, Droplets, Trash2, Crown, Wind, GraduationCap, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlasmaPageBackground } from "@/components/ui/plasma-background";
 import { PixelCard } from "@/components/ui/pixel-card";
@@ -21,6 +21,7 @@ const roles: {
   { role: "waste", label: "Waste Admin", icon: Trash2, desc: "Manage waste bins and collection", pixelColors: ["#052e16", "#14532d", "#22c55e", "#10b981"] },
   { role: "air", label: "Air Purifier Admin", icon: Wind, desc: "Monitor air quality and purifier status", pixelColors: ["#0c4a6e", "#0369a1", "#0ea5e9", "#38bdf8"] },
   { role: "head", label: "Head User", icon: Crown, desc: "Master control panel : all modules", pixelColors: ["#3b0764", "#6b21a8", "#a855f7", "#ec4899"] },
+  { role: "student", label: "Student", icon: GraduationCap, desc: "Campus reports, leaderboard, and Eco score", pixelColors: ["#0f766e", "#0d9488", "#14b8a6", "#5eead4"] },
 ];
 
 const dashboardRoutes: Record<UserRole, string> = {
@@ -29,6 +30,7 @@ const dashboardRoutes: Record<UserRole, string> = {
   waste: "/dashboard/waste",
   air: "/air",
   head: "/dashboard/head",
+  student: "/dashboard/campus",
 };
 
 export default function Login() {

@@ -5,36 +5,50 @@ import {
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-import { Zap, Droplets, Trash2, LayoutDashboard, Cpu, Wind } from "lucide-react";
+import { Zap, Droplets, Trash2, LayoutDashboard, Cpu, Wind, Leaf, Users } from "lucide-react";
 import { EcoGridLogo } from "@/components/brand/EcoGridLogo";
 
 const roleMenus: Record<UserRole, { title: string; url: string; icon: typeof Zap }[]> = {
   electricity: [
     { title: "Dashboard", url: "/dashboard/electricity", icon: Zap },
+    { title: "Eco Score", url: "/dashboard/sustainability", icon: Leaf },
+    { title: "Campus", url: "/dashboard/campus", icon: Users },
     { title: "Air Purifier", url: "/air", icon: Wind },
     { title: "Devices", url: "/dashboard/devices", icon: Cpu },
   ],
   water: [
     { title: "Dashboard", url: "/dashboard/water", icon: Droplets },
+    { title: "Eco Score", url: "/dashboard/sustainability", icon: Leaf },
+    { title: "Campus", url: "/dashboard/campus", icon: Users },
     { title: "Air Purifier", url: "/air", icon: Wind },
     { title: "Devices", url: "/dashboard/devices", icon: Cpu },
   ],
   waste: [
     { title: "Dashboard", url: "/dashboard/waste", icon: Trash2 },
+    { title: "Eco Score", url: "/dashboard/sustainability", icon: Leaf },
+    { title: "Campus", url: "/dashboard/campus", icon: Users },
     { title: "Air Purifier", url: "/air", icon: Wind },
     { title: "Devices", url: "/dashboard/devices", icon: Cpu },
   ],
   air: [
     { title: "Dashboard", url: "/air", icon: Wind },
+    { title: "Eco Score", url: "/dashboard/sustainability", icon: Leaf },
+    { title: "Campus", url: "/dashboard/campus", icon: Users },
     { title: "Devices", url: "/dashboard/devices", icon: Cpu },
   ],
   head: [
     { title: "Overview", url: "/dashboard/head", icon: LayoutDashboard },
+    { title: "Eco Score", url: "/dashboard/sustainability", icon: Leaf },
+    { title: "Campus", url: "/dashboard/campus", icon: Users },
     { title: "Electricity", url: "/dashboard/electricity", icon: Zap },
     { title: "Water", url: "/dashboard/water", icon: Droplets },
     { title: "Waste", url: "/dashboard/waste", icon: Trash2 },
     { title: "Air Purifier", url: "/air", icon: Wind },
     { title: "Devices", url: "/dashboard/devices", icon: Cpu },
+  ],
+  student: [
+    { title: "Campus", url: "/dashboard/campus", icon: Users },
+    { title: "Eco Score", url: "/dashboard/sustainability", icon: Leaf },
   ],
 };
 

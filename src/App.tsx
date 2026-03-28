@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,8 +19,8 @@ import WasteDashboard from "./pages/WasteDashboard";
 import HeadDashboard from "./pages/HeadDashboard";
 import DevicesPage from "./pages/DevicesPage";
 import AirDashboard from "./pages/AirDashboard";
-
-const queryClient = new QueryClient();
+import SustainabilityInsightsPage from "./pages/SustainabilityInsightsPage";
+import CampusEngagementPage from "./pages/CampusEngagementPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -30,9 +29,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <SystemPowerProvider>
+  <AuthProvider>
+    <SystemPowerProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -57,6 +55,8 @@ const App = () => (
               <Route path="waste" element={<WasteDashboard />} />
               <Route path="head" element={<HeadDashboard />} />
               <Route path="devices" element={<DevicesPage />} />
+              <Route path="sustainability" element={<SustainabilityInsightsPage />} />
+              <Route path="campus" element={<CampusEngagementPage />} />
             </Route>
             <Route
               path="/air"
@@ -72,9 +72,8 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
-      </SystemPowerProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+    </SystemPowerProvider>
+  </AuthProvider>
 );
 
 export default App;
