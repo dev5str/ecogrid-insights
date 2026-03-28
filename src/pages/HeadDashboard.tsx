@@ -62,10 +62,16 @@ export default function HeadDashboard() {
           <StatusCard title="Waste : Critical Bins" value={waste.criticalBins} icon={Trash2} severity={waste.criticalBins > 3 ? "critical" : waste.criticalBins > 0 ? "warning" : "normal"} subtitle={`${waste.bins.length} total bins`} />
           <StatusCard
             title="Air : Gas Level"
-            value={`${air.reading.gas} PPM`}
+            value={`${air.reading.gas} ${air.reading.metric === "mq135_adc" ? "ADC" : "PPM"}`}
             icon={Activity}
-            severity={air.reading.gas > 450 ? "critical" : air.reading.gas > 300 ? "warning" : "normal"}
-            subtitle={air.isLive ? "Live Firebase" : "No live reading"}
+            severity={
+              air.reading.status === "Dangerous"
+                ? "critical"
+                : air.reading.status === "Moderate"
+                  ? "warning"
+                  : "normal"
+            }
+            subtitle={air.isLive ? `Live Firebase (${air.dataSource ?? "—"})` : "No live reading"}
           />
         </div>
       </BlurFade>

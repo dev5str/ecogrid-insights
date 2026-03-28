@@ -49,7 +49,7 @@ export default function CampusEngagementPage() {
       <BlurFade delay={0.05}>
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-            <Users className="h-7 w-7 text-sky-400" />
+            <Users className="h-7 w-7 text-green-500" />
             Campus engagement
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

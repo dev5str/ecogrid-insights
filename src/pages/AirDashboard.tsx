@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useSystemPower } from "@/contexts/SystemPowerContext";
 import { SystemModuleOffline } from "@/components/dashboard/SystemModuleOffline";
 import { Wind, Droplets, Thermometer, ShieldAlert, Gauge } from "lucide-react";
@@ -8,13 +8,17 @@ import { PixelCard } from "@/components/ui/pixel-card";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { ZoneBreakdown } from "@/components/dashboard/ZoneBreakdown";
 import { useZoneTelemetry } from "@/hooks/useZoneTelemetry";
-import { useFirebaseAirData } from "@/hooks/useFirebaseAirData";
+import {
+  useFirebaseAirData,
+  MQ135_ADC_MAX,
+  MQ135_ADC_DANGEROUS_MIN,
+  MQ135_ADC_MODERATE_MIN,
+} from "@/hooks/useFirebaseAirData";
+import { toast } from "sonner";
 
 function clamp(num: number, min: number, max: number) {
   return Math.min(max, Math.max(min, num));
 }
-
-const MAX_GAS_PPM = 600;
 
 function describeStatus(status: "Good" | "Moderate" | "Dangerous") {
   if (status === "Dangerous") return "critical";
@@ -25,12 +29,49 @@ function describeStatus(status: "Good" | "Moderate" | "Dangerous") {
 export default function AirDashboard() {
   const { isOn } = useSystemPower();
   const powered = isOn("air");
-  const { reading, isLive } = useFirebaseAirData({ enabled: powered });
+  const { reading, isLive, dataSource, gasScaleMax } = useFirebaseAirData({ enabled: powered });
+  const gasUnit = reading.metric === "mq135_adc" ? "ADC" : "PPM";
 
   const zoneAir = useZoneTelemetry("air", powered);
 
+  const airZonesWithLiveMgAudi = useMemo(() => {
+    const simRows =
+      reading.metric === "mq135_adc"
+        ? zoneAir.map((z) => ({
+            zone: z.zone,
+            value: Math.min(MQ135_ADC_MAX, Math.round(z.value)),
+          }))
+        : zoneAir.map((z) => ({
+            zone: z.zone,
+            value: Math.min(600, Math.round((z.value / MQ135_ADC_MAX) * 600)),
+          }));
+    return [{ zone: "MG Audi", value: reading.gas }, ...simRows];
+  }, [reading.gas, reading.metric, zoneAir]);
+
+  const prevAirStatusRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!powered) {
+      prevAirStatusRef.current = null;
+      return;
+    }
+    if (reading.metric !== "mq135_adc") {
+      prevAirStatusRef.current = reading.status;
+      return;
+    }
+    const prev = prevAirStatusRef.current;
+    if (reading.status === "Dangerous" && prev !== "Dangerous") {
+      toast.error(`Dangerous air: ADC ${reading.gas} (≥ ${MQ135_ADC_DANGEROUS_MIN})`);
+    } else if (reading.status === "Moderate" && prev === "Good") {
+      toast.warning(`Air warning: ADC ${reading.gas} (≥ ${MQ135_ADC_MODERATE_MIN})`);
+    }
+    prevAirStatusRef.current = reading.status;
+  }, [powered, reading.metric, reading.status, reading.gas]);
+
   const severity = useMemo(() => describeStatus(reading.status), [reading.status]);
-  const normalizedGaugeValue = useMemo(() => clamp(reading.gas / MAX_GAS_PPM, 0, 1), [reading.gas]);
+  const normalizedGaugeValue = useMemo(
+    () => clamp(reading.gas / gasScaleMax, 0, 1),
+    [reading.gas, gasScaleMax],
+  );
   const airGaugeProps: any = {
     value: normalizedGaugeValue,
     type: "semicircle",
@@ -89,7 +130,7 @@ export default function AirDashboard() {
             Air Purifier Dashboard
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Real-time indoor air quality from Firebase (MQ135 + DHT readings)
+            Real-time MQ135 from Firebase (`environment/air` · ESP8266). Humidity/temperature when present in the same doc.
           </p>
         </div>
       </BlurFade>
@@ -108,20 +149,38 @@ export default function AirDashboard() {
             Gas Concentration Gauge
           </h3>
           <p className="mb-4 text-xs text-muted-foreground">
-            Source: {isLive ? "Live Firebase" : "Waiting for Firebase data"}
+            Source:{" "}
+            {isLive && dataSource
+              ? `Live Firebase · collection /${dataSource}`
+              : "Waiting for Firebase (`environment/air` with `airValue` / `airStatus`)"}
           </p>
           <div className="relative mx-auto w-full max-w-[420px]">
             <GaugeComponent {...airGaugeProps} />
           </div>
           <div className="mt-2 text-center">
-            <p className="text-2xl font-bold text-foreground">{reading.gas} PPM</p>
-            <p className="mt-1 text-sm text-muted-foreground">MQ135 Gas Level</p>
+            <p className="text-2xl font-bold text-foreground">
+              {reading.gas} {gasUnit}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {reading.metric === "mq135_adc" ? "MQ135 raw (A0 · matches ESP sketch)" : "MQ135 scaled reading"}
+            </p>
           </div>
-          <div className="mt-3 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-            <span>0 PPM</span>
-            <span className="rounded-full bg-secondary px-2 py-1">Moderate {">"} 300</span>
-            <span className="rounded-full bg-secondary px-2 py-1">Dangerous {">"} 450</span>
-            <span>{MAX_GAS_PPM} PPM</span>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>0 {gasUnit}</span>
+            {reading.metric === "mq135_adc" ? (
+              <>
+                <span className="rounded-full bg-secondary px-2 py-1">Moderate ≥ {MQ135_ADC_MODERATE_MIN}</span>
+                <span className="rounded-full bg-secondary px-2 py-1">Dangerous ≥ {MQ135_ADC_DANGEROUS_MIN}</span>
+              </>
+            ) : (
+              <>
+                <span className="rounded-full bg-secondary px-2 py-1">Moderate {">"} 300</span>
+                <span className="rounded-full bg-secondary px-2 py-1">Dangerous {">"} 450</span>
+              </>
+            )}
+            <span>
+              {gasScaleMax} {gasUnit}
+            </span>
           </div>
         </PixelCard>
       </BlurFade>
@@ -129,46 +188,69 @@ export default function AirDashboard() {
       <BlurFade delay={0.14}>
         <ZoneBreakdown
           title="Air quality by zone"
-          subtitle="MQ135-style gas PPM - per campus zone"
-          unit="ppm"
+          subtitle={`MG Audi: live Firebase (${gasUnit}). Other rows: simulated campus zones.`}
+          unit={reading.metric === "mq135_adc" ? "adc" : "ppm"}
           accentClass="bg-sky-400"
           mode="segmented"
-          segmentScaleMax={MAX_GAS_PPM}
-          zones={zoneAir.map((z) => ({ zone: z.zone, value: z.value }))}
+          segmentScaleMax={gasScaleMax}
+          zones={airZonesWithLiveMgAudi}
         />
       </BlurFade>
 
       <BlurFade delay={0.15}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatusCard title="Gas Level" value={`${reading.gas} PPM`} icon={Gauge} severity={severity} subtitle="MQ135 from Firebase" />
-          <StatusCard title="Humidity" value={`${reading.humidity}%`} icon={Droplets} subtitle="DHT from Firebase" />
-          <StatusCard title="Temperature" value={`${reading.temperature}°C`} icon={Thermometer} subtitle="DHT from Firebase" />
-          <StatusCard title="Air Status" value={reading.status} icon={ShieldAlert} severity={severity} subtitle="Computed from gas level" />
+          <StatusCard
+            title="Gas Level"
+            value={`${reading.gas} ${gasUnit}`}
+            icon={Gauge}
+            severity={severity}
+            subtitle={reading.metric === "mq135_adc" ? "airValue · ESP8266 patch" : "MQ135 / PPM fields"}
+          />
+          <StatusCard title="Humidity" value={`${reading.humidity}%`} icon={Droplets} subtitle="Optional in Firestore" />
+          <StatusCard title="Temperature" value={`${reading.temperature}°C`} icon={Thermometer} subtitle="Optional in Firestore" />
+          <StatusCard
+            title="Air Status"
+            value={reading.status}
+            icon={ShieldAlert}
+            severity={severity}
+            subtitle={reading.metric === "mq135_adc" ? "airStatus BAD/GOOD + ADC bands" : "From PPM thresholds"}
+          />
         </div>
       </BlurFade>
 
       <BlurFade delay={0.2}>
         <PixelCard className="rounded-xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm">
           <h3 className="mb-3 text-sm font-semibold">Alerts</h3>
-          {reading.gas > 450 ? (
+          {reading.status === "Dangerous" ? (
             <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
               <p className="font-medium text-red-400">Dangerous air quality detected</p>
               <p className="mt-1 text-sm text-red-200/80">
-                Gas concentration is {reading.gas} PPM. Increase ventilation and inspect purifier filters immediately.
+                Reading is {reading.gas} {gasUnit}.
+                {reading.metric === "mq135_adc"
+                  ? ` ADC is at or above ${MQ135_ADC_DANGEROUS_MIN} (danger band).`
+                  : " Concentration is in the danger band."}{" "}
+                Increase ventilation and inspect purifier filters immediately.
               </p>
             </div>
-          ) : reading.gas > 300 ? (
+          ) : reading.status === "Moderate" ? (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
               <p className="font-medium text-amber-400">Moderate pollution warning</p>
               <p className="mt-1 text-sm text-amber-100/80">
-                Gas concentration is {reading.gas} PPM. Air quality is declining; monitor purifier performance.
+                Reading is {reading.gas} {gasUnit}.
+                {reading.metric === "mq135_adc"
+                  ? ` ADC reached at least ${MQ135_ADC_MODERATE_MIN} (warning band, matches ESP AIR_THRESHOLD).`
+                  : " Air quality is declining;"}{" "}
+                monitor purifier performance.
               </p>
             </div>
           ) : (
             <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4">
               <p className="font-medium text-green-400">Air quality is good</p>
               <p className="mt-1 text-sm text-green-100/80">
-                Gas concentration is {reading.gas} PPM. No action required.
+                Reading is {reading.gas} {gasUnit}.
+                {reading.metric === "mq135_adc"
+                  ? ` Below ${MQ135_ADC_MODERATE_MIN} ADC; no warning threshold crossed.`
+                  : " No action required."}
               </p>
             </div>
           )}

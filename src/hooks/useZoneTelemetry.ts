@@ -8,15 +8,26 @@ export interface ZoneReading {
   value: number;
 }
 
+/** Simulated MQ135-style ADC (0–1023): most zones stay under 300; one “hot” zone can reach up to ~500. */
+function generateAirZoneReadings(): ZoneReading[] {
+  const zones = [...CAMPUS_ZONES];
+  const hotIndex = Math.floor(Math.random() * zones.length);
+  return zones.map((zone, i) => {
+    if (i === hotIndex) {
+      return { zone, value: Math.round(320 + Math.random() * 180) };
+    }
+    return { zone, value: Math.round(60 + Math.random() * 235) };
+  });
+}
+
 function generate(kind: ZoneTelemetryKind): ZoneReading[] {
+  if (kind === "air") return generateAirZoneReadings();
   return CAMPUS_ZONES.map((zone) => ({
     zone,
     value:
       kind === "electricity"
         ? Math.round(38 + Math.random() * 125)
-        : kind === "water"
-          ? Math.round(14 + Math.random() * 58)
-          : Math.round(160 + Math.random() * 340),
+        : Math.round(14 + Math.random() * 58),
   }));
 }
 

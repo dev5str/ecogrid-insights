@@ -1,6 +1,6 @@
 # EcoGrid Insights: Complete Project Documentation
 
-Single reference for **developers**, **operators**, and **hardware integrators**. It covers architecture, features, simulation vs live data, local AI (Ollama), Firebase waste bins, environment configuration, deployment, and Arduino-style waste sensing.
+Single reference for **developers**, **operators**, and **hardware integrators**. It covers architecture, features, simulation vs live data, local AI (Ollama), Firebase waste bins, environment configuration, deployment, and Arduino-style guides (waste ultrasonic, air **MQ135** + Bluetooth).
 
 ---
 
@@ -25,8 +25,9 @@ Single reference for **developers**, **operators**, and **hardware integrators**
 17. [Future backend API contract](#17-future-backend-api-contract)
 18. [Waste bins: Firestore integration](#18-waste-bins-firestore-integration)
 19. [Waste bins: Arduino and ultrasonic sensor (hardware)](#19-waste-bins-arduino-and-ultrasonic-sensor-hardware)
-20. [Security and privacy notes](#20-security-and-privacy-notes)
-21. [Maintaining this document](#21-maintaining-this-document)
+20. [Air quality: MQ135, Arduino Uno, and Bluetooth](#20-air-quality-mq135-arduino-uno-and-bluetooth)
+21. [Security and privacy notes](#21-security-and-privacy-notes)
+22. [Maintaining this document](#22-maintaining-this-document)
 
 ---
 
@@ -280,8 +281,8 @@ pnpm test           # vitest
 **Hook:** `src/hooks/useFirebaseWasteData.ts`  
 **Config:** `src/firebase.js`
 
-- Collection **`bins`**: documents with fill fields such as `fillLevel`, `level`, `value`, or `percentage`; optional `zone`, `location`, `name`, etc.
-- The UI presents **15** logical bins: **`bin1`** maps to the **first** Firestore document (sorted by id) and is labeled **MG Audi** in the UI; **`bin2`–`bin15`** may be **synthetic** with campus-style names when Firestore does not supply enough documents.
+- Collection **`bins`**: documents such as **`bin1`**, **`bin2`**, **`bin3`** (ESP8266 `patchDocument` paths). Fields: **`fillLevel`** (integer 0–100), optional **`status`** (e.g. CRITICAL / WARNING / NORMAL), **`distance`**, plus optional `zone` / `location`. Sorted by document id; all Firestore bins are shown, then **synthetic** bins pad to **15** total.
+- **`bin1`** is labeled **MG Audi** in the UI; other ids like **`bin2`** show as **Bin 2**, etc.
 - Collection **`alerts`**: waste-related documents merge into the feed; local thresholds can still generate alerts when fill crosses warning/critical bands.
 
 If **no** `bins` documents exist, live **MG Audi** can show **0%** as a placeholder.
@@ -357,7 +358,92 @@ Use **`POST /api/v1/devices/:id/readings`** once the API exists, or write direct
 
 ---
 
-## 20. Security and privacy notes
+## 20. Air quality: MQ135, Arduino Uno, and Bluetooth
+
+This section explains a practical lab setup: **MQ135** as a broad **gas / air-quality proxy**, **Arduino Uno** for analog read and logic, and a **Bluetooth serial module** to send readings to a phone or PC. The **Air** page (`/air`) reads live metrics when the air system is on. **Primary (ESP8266):** document **`environment/air`** with **`airValue`** (integer, raw MQ135 ADC 0–1023) and **`airStatus`** (`GOOD` / `BAD`, threshold 250 in typical firmware). The gauge uses **ADC** scale (max 1023); **BAD** maps to at least Moderate. **Fallbacks:** other docs under collection **`environment`** (latest by time fields), then **`airReadings`**, then collection **`air`**. Legacy fields **gas** / **ppm** / **value** still work (600 PPM scale). Simulated zone rows are scaled to match when ADC mode is active.
+
+**Roles:** **MQ135** = sensor (does not purify air). An **air purifier** is a separate device; you can **control** it (e.g. relay on fan power) from the Arduino when readings cross a threshold, or run the purifier independently.
+
+### 20.1 What the MQ135 actually measures
+
+- The **MQ135** is a **semiconductor** sensor sensitive to several gases (e.g. ammonia, alcohol, benzene, smoke). It gives a **rough** indication of **“stuff in the air”**, not calibrated **PM2.5**, **CO₂**, or regulatory-grade readings.
+- Output is usually **analog voltage** (higher gas concentration → different resistance → different voltage on **AOUT**).
+- **Preheat:** allow **minutes** of power-on warmup for stable readings; first-time **24–48 h** burn-in improves consistency (per many vendor notes).
+- **Temperature and humidity** affect the reading; for serious deployments add a **BME280 / DHT22** and compensate or log alongside MQ135.
+
+### 20.2 Parts (example)
+
+| Item | Role |
+|------|------|
+| Arduino Uno | `analogRead`, thresholds, Bluetooth TX |
+| MQ135 module (with **AOUT** + **DOUT** + pot) | Analog gas proxy; **DOUT** is a fixed comparator (optional) |
+| **HC-05** or **HC-06** | Classic Bluetooth **Serial Port Profile (SPP)**; acts as wireless serial |
+| **HM-10** (optional) | **BLE** if you need Low Energy instead of HC-05 |
+| Stable **5 V** supply | Uno USB or regulated adapter; sensor current matters during warmup |
+| (Optional) **Relay module** | Isolate **purifier mains**; Arduino only switches low-voltage relay coil |
+
+**Safety:** Do **not** wire Arduino GPIO directly to **mains** purifier power. Use a **relay** rated for your load and follow electrical codes.
+
+### 20.3 Wiring (MQ135 → Uno)
+
+Typical breakout:
+
+- **VCC** → **5 V** (Uno)  
+- **GND** → **GND**  
+- **AOUT** → **A0** (or any analog pin)  
+- **DOUT** → optional digital pin if you use the on-board comparator threshold  
+
+Adjust the module **potentiometer** (if present) so **DOUT** flips at a useful analog level, or ignore **DOUT** and threshold in software on `analogRead`.
+
+### 20.4 Wiring (HC-05 or HC-06 → Uno)
+
+These modules use **UART** (serial). **Connect TX to RX and RX to TX** (crossover).
+
+- **VCC** → often **3.3 V** or **5 V** depending on module label (follow your board’s spec; many HC-05 boards accept 5 V VCC).  
+- **GND** → **GND**  
+- **TXD** (module) → **Arduino pin 10** (example **RX** for `SoftwareSerial`)  
+- **RXD** (module) → **Arduino pin 11** (example **TX**)  
+
+**Logic levels:** If the module’s **RX** is **3.3 V only**, use a **voltage divider** (e.g. 1 kΩ + 2 kΩ) on the Uno **TX** line or a level shifter so you do not overdrive **RXD**.
+
+**Pairing:** Power the module, pair from phone/PC (PIN often `1234` or `0000` for HC-05/HC-06), then open a **Bluetooth serial** app or paired COM port on Windows to receive lines.
+
+### 20.5 Firmware outline (Arduino)
+
+1. Every **2–10 s**, read **A0** with `analogRead` (0–1023 on Uno).  
+2. Apply a **moving average** or **median** over **5–20** samples to reduce noise.  
+3. Map raw value to a **simple index** for your dashboard, e.g. **0–100** “air concern” or bands **good / moderate / poor** (calibrate in **clean air** vs **known polluted** sample after warmup).  
+4. Print one line per report on `SoftwareSerial` to the Bluetooth module, e.g. CSV or JSON:
+
+```text
+AIR,raw=412,idx=35,zone=lab-1
+```
+
+or
+
+```json
+{"type":"air","raw":412,"index":35,"unit":"index"}
+```
+
+5. (Optional) If **index** exceeds a limit, set a **digital pin HIGH** to energize a **relay** (with flyback diode) that turns the **purifier** on or to a higher speed.
+
+### 20.6 Getting data into EcoGrid Insights
+
+Today the web app does **not** listen to Bluetooth in the browser. Typical paths:
+
+- **Phone / gateway:** App or script reads Bluetooth serial and **POST**s to your API (**§17**) or writes **Firestore** documents your team defines for **air** metrics.  
+- **PC bridge:** Python **pyserial** on the paired COM port forwards JSON to HTTP or MQTT.  
+- **Better long-term:** **ESP32** with **Wi‑Fi** (and optional BLE) posting directly to HTTPS or MQTT avoids keeping a phone in the loop.
+
+### 20.7 Limitations
+
+- MQ135 is **not** a replacement for certified **IAQ** monitors.  
+- For **particles** (dust), consider **PMS5003** (and keep UART wiring separate from noisy power).  
+- Bluetooth range and pairing are fine for **prototypes**; buildings often prefer **Wi‑Fi** or **LoRa** to a central collector.
+
+---
+
+## 21. Security and privacy notes
 
 - **Demo auth** is not suitable for production.  
 - **Firebase** web keys in client bundles are normal for Firestore but must be **locked down** with Firebase security rules and App Check for real deployments.  
@@ -366,14 +452,15 @@ Use **`POST /api/v1/devices/:id/readings`** once the API exists, or write direct
 
 ---
 
-## 21. Maintaining this document
+## 22. Maintaining this document
 
 When you:
 
 - replace simulations with real APIs, update **§8**, **§17**, and **§9** as needed;  
 - change Firestore schema, update **§18**;  
 - change Ollama routes or env names, update **§10** and **§13**;  
-- add roles or routes, update **§6** and **§7**.
+- add roles or routes, update **§6** and **§7**;  
+- change air or waste hardware guides, update **§19** and **§20**.
 
 ---
 

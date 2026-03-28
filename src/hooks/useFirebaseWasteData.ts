@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, type QueryDocumentSnapshot } from "firebase/firestore";
 import { db } from "@/firebase";
 import type { Alert, WasteBin } from "@/hooks/useSimulatedData";
 
@@ -28,14 +28,56 @@ function randBetween(min: number, max: number) {
   return Math.round((Math.random() * (max - min) + min) * 10) / 10;
 }
 
+/** Simulated bins `bin{startNumber}…` for UI padding (ESP sketch uses `bins/bin1`…`bin3`). */
+function initialSimulatedBinsFrom(startBinNumber: number, count: number): WasteBin[] {
+  return Array.from({ length: count }, (_, i) => {
+    const binNum = startBinNumber + i;
+    const nameIndex = Math.max(0, binNum - 2) % SIM_LOCATION_NAMES.length;
+    const name = SIM_LOCATION_NAMES[nameIndex] ?? `Zone ${binNum}`;
+    return {
+      id: `bin${binNum}`,
+      name,
+      zone: name,
+      fillLevel: randBetween(12, 55),
+      lastCollected: new Date(Date.now() - randBetween(1, 48) * 3600000).toLocaleString(),
+    };
+  });
+}
+
 function initialSimulatedBins(): WasteBin[] {
-  return SIM_LOCATION_NAMES.map((name, i) => ({
-    id: `bin${i + 2}`,
-    name,
-    zone: name,
-    fillLevel: randBetween(12, 55),
-    lastCollected: new Date(Date.now() - randBetween(1, 48) * 3600000).toLocaleString(),
-  }));
+  return initialSimulatedBinsFrom(2, SIM_LOCATION_NAMES.length);
+}
+
+function displayNameForBinDocId(id: string): string {
+  if (id === "bin1") return LIVE_WASTE_BIN_NAME;
+  const m = /^bin(\d+)$/i.exec(id);
+  if (m) return `Bin ${m[1]}`;
+  return id;
+}
+
+function wasteBinFromFirestoreDoc(docSnap: QueryDocumentSnapshot): WasteBin {
+  const data = docSnap.data() as Record<string, unknown>;
+  const id = docSnap.id;
+  const zone = normalizeZone(data);
+  return {
+    id,
+    name: displayNameForBinDocId(id),
+    zone: zone !== "Unknown Zone" ? zone : displayNameForBinDocId(id),
+    fillLevel: normalizeFillLevel(data),
+    lastCollected:
+      typeof data.lastCollected === "string"
+        ? data.lastCollected
+        : data.lastCollected instanceof Date
+          ? data.lastCollected.toLocaleString()
+          : "",
+  };
+}
+
+function maxBinNumericId(bins: WasteBin[]): number {
+  return bins.reduce((m, b) => {
+    const n = /^bin(\d+)$/i.exec(b.id);
+    return n ? Math.max(m, parseInt(n[1], 10)) : m;
+  }, 0);
 }
 
 function toDate(value: unknown): Date {
@@ -127,36 +169,37 @@ const EMPTY_LIVE_BIN: WasteBin = {
 };
 
 /**
- * 15 bins total: **bin1** from Firestore (first document when sorted by id), **bin2-bin15** simulated.
- * Head dashboard still uses `useWasteData` from `useSimulatedData`.
+ * Up to **15** bins: all Firestore `bins/*` docs (sorted by id, e.g. ESP8266 `bin1`…`bin3`), padded with simulated bins.
+ * When Firestore is empty, **bin1** shows as MG Audi at 0% plus simulated **bin2**…**bin15**.
  */
 export function useFirebaseWasteData(options?: { enabled?: boolean }) {
   const enabled = options?.enabled !== false;
 
-  const [realtimeBin, setRealtimeBin] = useState<WasteBin | null>(null);
+  const [realtimeBins, setRealtimeBins] = useState<WasteBin[]>([]);
   const [simBins, setSimBins] = useState<WasteBin[]>(() => (enabled ? initialSimulatedBins() : []));
   const [remoteAlerts, setRemoteAlerts] = useState<Alert[]>([]);
   const [localAlerts, setLocalAlerts] = useState<Alert[]>([]);
 
   const prevSimSeverityRef = useRef<Map<string, Alert["severity"]>>(new Map());
   const simSeveritySeededRef = useRef(false);
-  const prevLiveSeverityRef = useRef<Alert["severity"]>("normal");
+  const prevLiveByIdRef = useRef<Map<string, Alert["severity"]>>(new Map());
 
   useEffect(() => {
     if (!enabled) {
-      setRealtimeBin(null);
+      setRealtimeBins([]);
       setRemoteAlerts([]);
       setLocalAlerts([]);
       setSimBins([]);
       simSeveritySeededRef.current = false;
       prevSimSeverityRef.current.clear();
-      prevLiveSeverityRef.current = "normal";
+      prevLiveByIdRef.current.clear();
       return;
     }
+    setRealtimeBins([]);
     setSimBins(initialSimulatedBins());
     simSeveritySeededRef.current = false;
     prevSimSeverityRef.current.clear();
-    prevLiveSeverityRef.current = "normal";
+    prevLiveByIdRef.current.clear();
   }, [enabled]);
 
   useEffect(() => {
@@ -166,25 +209,12 @@ export function useFirebaseWasteData(options?: { enabled?: boolean }) {
     const alertsRef = collection(db, "alerts");
 
     const unsubscribeBins = onSnapshot(binsRef, (snapshot) => {
-      const sorted = [...snapshot.docs].sort((a, b) => a.id.localeCompare(b.id));
-      const docSnap = sorted[0];
-      if (!docSnap) {
-        setRealtimeBin(null);
+      if (snapshot.empty) {
+        setRealtimeBins([]);
         return;
       }
-      const data = docSnap.data() as Record<string, unknown>;
-      setRealtimeBin({
-        id: "bin1",
-        name: LIVE_WASTE_BIN_NAME,
-        zone: normalizeZone(data) || LIVE_WASTE_BIN_NAME,
-        fillLevel: normalizeFillLevel(data),
-        lastCollected:
-          typeof data.lastCollected === "string"
-            ? data.lastCollected
-            : data.lastCollected instanceof Date
-              ? data.lastCollected.toLocaleString()
-              : "",
-      });
+      const sorted = [...snapshot.docs].sort((a, b) => a.id.localeCompare(b.id));
+      setRealtimeBins(sorted.map((d) => wasteBinFromFirestoreDoc(d)));
     });
 
     const unsubscribeAlerts = onSnapshot(alertsRef, (snapshot) => {
@@ -254,30 +284,35 @@ export function useFirebaseWasteData(options?: { enabled?: boolean }) {
     }
   }, [enabled, simBins]);
 
-  /** Live bin1: same when Firestore fill crosses into warning/critical. */
+  /** Live Firestore bins: alert when any bin’s fill severity worsens (ESP `fillLevel` + CRITICAL/WARNING/NORMAL). */
   useEffect(() => {
     if (!enabled) return;
-    const bin = realtimeBin ?? EMPTY_LIVE_BIN;
-    const next = wasteSeverityFromFill(bin.fillLevel);
-    const prev = prevLiveSeverityRef.current;
-    if (SEV_RANK[next] > SEV_RANK[prev]) {
-      setLocalAlerts((a) =>
-        [
-          {
-            id: crypto.randomUUID(),
-            timestamp: new Date(),
-            zone: bin.zone,
-            module: "waste",
-            severity: next,
-            message: syntheticWasteAlertMessage(bin, next),
-            value: bin.fillLevel,
-          },
-          ...a,
-        ].slice(0, 50),
-      );
+    const live = realtimeBins.length > 0 ? realtimeBins : [EMPTY_LIVE_BIN];
+    for (const bin of live) {
+      const next = wasteSeverityFromFill(bin.fillLevel);
+      const prev = prevLiveByIdRef.current.get(bin.id) ?? "normal";
+      if (SEV_RANK[next] > SEV_RANK[prev]) {
+        setLocalAlerts((a) =>
+          [
+            {
+              id: crypto.randomUUID(),
+              timestamp: new Date(),
+              zone: bin.zone,
+              module: "waste",
+              severity: next,
+              message: syntheticWasteAlertMessage(bin, next),
+              value: bin.fillLevel,
+            },
+            ...a,
+          ].slice(0, 50),
+        );
+      }
+      prevLiveByIdRef.current.set(bin.id, next);
     }
-    prevLiveSeverityRef.current = next;
-  }, [enabled, realtimeBin]);
+    for (const id of prevLiveByIdRef.current.keys()) {
+      if (!live.some((b) => b.id === id)) prevLiveByIdRef.current.delete(id);
+    }
+  }, [enabled, realtimeBins]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -293,11 +328,30 @@ export function useFirebaseWasteData(options?: { enabled?: boolean }) {
     return () => clearInterval(interval);
   }, [enabled]);
 
+  const liveLayout = useMemo(() => {
+    if (!enabled) return { live: [] as WasteBin[], simStart: 2, simCount: 0 };
+    if (realtimeBins.length === 0) {
+      return { live: [EMPTY_LIVE_BIN], simStart: 2, simCount: SIM_LOCATION_NAMES.length };
+    }
+    const maxN = maxBinNumericId(realtimeBins);
+    return {
+      live: realtimeBins,
+      simStart: maxN + 1,
+      simCount: Math.max(0, 15 - realtimeBins.length),
+    };
+  }, [enabled, realtimeBins]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    setSimBins(initialSimulatedBinsFrom(liveLayout.simStart, liveLayout.simCount));
+    simSeveritySeededRef.current = false;
+    prevSimSeverityRef.current.clear();
+  }, [enabled, liveLayout.simStart, liveLayout.simCount]);
+
   const bins = useMemo(() => {
     if (!enabled) return [];
-    const first = realtimeBin ?? EMPTY_LIVE_BIN;
-    return [first, ...simBins];
-  }, [enabled, realtimeBin, simBins]);
+    return [...liveLayout.live, ...simBins];
+  }, [enabled, liveLayout.live, simBins]);
 
   const criticalBins = bins.filter((b) => b.fillLevel > 90).length;
   const warningBins = bins.filter((b) => b.fillLevel >= 70 && b.fillLevel <= 90).length;
