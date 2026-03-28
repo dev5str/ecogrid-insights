@@ -1,6 +1,8 @@
 import { useWaterData } from "@/hooks/useSimulatedData";
+import { useSystemPower } from "@/contexts/SystemPowerContext";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
+import { SystemModuleOffline } from "@/components/dashboard/SystemModuleOffline";
 import { Droplets, AlertTriangle, Activity, Waves } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { PixelCard } from "@/components/ui/pixel-card";
@@ -10,7 +12,9 @@ import {
 } from "recharts";
 
 export default function WaterDashboard() {
-  const { data, alerts, currentFlow, anomalyCount } = useWaterData();
+  const { isOn } = useSystemPower();
+  const powered = isOn("water");
+  const { data, alerts, currentFlow, anomalyCount } = useWaterData({ enabled: powered });
 
   const severity =
     currentFlow > 75 || currentFlow < 18 ? "critical" : currentFlow > 60 ? "warning" : "normal";
@@ -27,6 +31,13 @@ export default function WaterDashboard() {
         </div>
       </BlurFade>
 
+      {!powered ? (
+        <SystemModuleOffline
+          title="Water monitoring is off"
+          description="Flow sensors, charts, and leak alerts stay disabled until you turn the water system on in the top bar."
+        />
+      ) : (
+        <>
       <BlurFade delay={0.1}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatusCard title="Current Flow Rate" value={`${currentFlow} L/min`} icon={Droplets} severity={severity} subtitle="Live reading" />
@@ -75,6 +86,8 @@ export default function WaterDashboard() {
           <AlertFeed alerts={alerts} title="Water Alerts" />
         </BlurFade>
       </div>
+        </>
+      )}
     </div>
   );
 }

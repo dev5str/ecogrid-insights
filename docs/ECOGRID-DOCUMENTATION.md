@@ -185,8 +185,9 @@ For **ESP32**, use **WiFiClient** or **PubSubClient** (MQTT) or **HTTPClient** t
 
 **Waste dashboard (`/dashboard/waste`)** uses **`useFirebaseWasteData`** (`src/hooks/useFirebaseWasteData.ts`) with **Firestore**:
 
+- The UI shows **15 bins** with fixed display names: **`bin1`** is labeled **MG Audi** and driven by the **first** Firestore document (sorted by document id); **`bin2` through `bin15`** are **simulated** with campus-style names (library, labs, hostel, cafeteria, etc.) plus **North Campus Bus Stand**, **City Railway Station**, and **International Airport T2**. If there are no `bins` docs, **MG Audi** shows **0%** as a placeholder.  
 - Collection **`bins`**: documents with fill fields such as `fillLevel`, `level`, `value`, or `percentage`; optional `zone`, `location`, `name`, `lastCollected`, etc.  
-- Collection **`alerts`**: waste-related docs (`module: "waste"` or bin-style fields) drive the alert feed.
+- Collection **`alerts`**: waste-related docs (`module: "waste"` or bin-style fields) are merged into the feed with **locally generated alerts** when simulated bins (or live `bin1`) cross from normal into warning or critical, so the panel is not empty if Firestore has no alert documents yet.
 
 Firebase is initialized in **`src/lib/firebase.ts`** (same project as branch `origin/bin`).
 
@@ -200,6 +201,10 @@ Firebase is initialized in **`src/lib/firebase.ts`** (same project as branch `or
 - **Water:** simulated L/min and “anomaly” flags : **not** tied to flow meters.  
 
 Integrating real devices would require the same pattern: **physical sensor → gateway → your API** → frontend polling or streaming.
+
+### 6.1 System power switches
+
+The dashboard **top bar** has a **Systems** control (next to the status text) with toggles for **Electricity**, **Water**, **Waste**, and **Air purifier**. When a system is **off**, that module **stops updating** (no simulation ticks, no Firestore listeners for waste), and its page shows an **offline** placeholder. The **LIVE / OFF** label reflects the current route’s module, or any module on for the **Head** overview. Choices are saved in **localStorage** under `ecogrid-systems-on`.
 
 ---
 

@@ -1,6 +1,8 @@
 import { useFirebaseWasteData } from "@/hooks/useFirebaseWasteData";
+import { useSystemPower } from "@/contexts/SystemPowerContext";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
+import { SystemModuleOffline } from "@/components/dashboard/SystemModuleOffline";
 import { CircularGauge } from "@/components/dashboard/CircularGauge";
 import { Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,7 +10,9 @@ import { BlurFade } from "@/components/ui/blur-fade";
 import { PixelCard } from "@/components/ui/pixel-card";
 
 export default function WasteDashboard() {
-  const { bins, alerts, criticalBins, warningBins, normalBins } = useFirebaseWasteData();
+  const { isOn } = useSystemPower();
+  const powered = isOn("waste");
+  const { bins, alerts, criticalBins, warningBins, normalBins } = useFirebaseWasteData({ enabled: powered });
 
   return (
     <div className="space-y-6">
@@ -22,6 +26,13 @@ export default function WasteDashboard() {
         </div>
       </BlurFade>
 
+      {!powered ? (
+        <SystemModuleOffline
+          title="Waste monitoring is off"
+          description="Bin levels, Firestore sync, and waste alerts stay disabled until you turn the waste system on in the top bar."
+        />
+      ) : (
+        <>
       <BlurFade delay={0.1}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatusCard title="Total Bins" value={bins.length} icon={Trash2} subtitle="Across all zones" />
@@ -33,25 +44,36 @@ export default function WasteDashboard() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <BlurFade delay={0.15} className="lg:col-span-2">
-          <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-5">
-            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+          <PixelCard className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-4">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
               Bin Fill Levels
             </h3>
             <ScrollArea className="h-[340px]">
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-5 p-1">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5 p-0.5">
                 {bins.map((bin) => (
-                  <CircularGauge key={bin.id} value={bin.fillLevel} label={bin.id} size={90} />
+                  <CircularGauge
+                    key={bin.id}
+                    value={bin.fillLevel}
+                    label={bin.name}
+                    tooltipDetails={{
+                      zone: bin.zone,
+                      lastCollected: bin.lastCollected,
+                      binId: bin.id,
+                    }}
+                  />
                 ))}
               </div>
             </ScrollArea>
           </PixelCard>
         </BlurFade>
 
-        <BlurFade delay={0.2}>
+        <BlurFade delay={0.2} className="min-w-0 w-full">
           <AlertFeed alerts={alerts} title="Waste Alerts" />
         </BlurFade>
       </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSystemPower } from "@/contexts/SystemPowerContext";
+import { SystemModuleOffline } from "@/components/dashboard/SystemModuleOffline";
 import { Wind, Droplets, Thermometer, ShieldAlert, Gauge } from "lucide-react";
 import GaugeComponent from "react-gauge-component";
 import { BlurFade } from "@/components/ui/blur-fade";
@@ -37,6 +39,9 @@ function describeStatus(status: AirStatus) {
 }
 
 export default function AirDashboard() {
+  const { isOn } = useSystemPower();
+  const powered = isOn("air");
+
   const [reading, setReading] = useState<AirReading>(() => {
     const gas = 265;
     return {
@@ -48,6 +53,7 @@ export default function AirDashboard() {
   });
 
   useEffect(() => {
+    if (!powered) return;
     let timeoutId: number | undefined;
     let stopped = false;
 
@@ -74,7 +80,7 @@ export default function AirDashboard() {
       stopped = true;
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [powered]);
 
   const severity = useMemo(() => describeStatus(reading.status), [reading.status]);
   const normalizedGaugeValue = useMemo(() => clamp(reading.gas / MAX_GAS_PPM, 0, 1), [reading.gas]);
@@ -141,6 +147,13 @@ export default function AirDashboard() {
         </div>
       </BlurFade>
 
+      {!powered ? (
+        <SystemModuleOffline
+          title="Air purifier monitoring is off"
+          description="Gas gauge, humidity, temperature, and air-quality alerts stay frozen until you turn the air purifier system on in the top bar."
+        />
+      ) : (
+        <>
       <BlurFade delay={0.1}>
         <PixelCard className="rounded-xl border border-border/50 bg-card/60 p-6 backdrop-blur-sm">
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
@@ -199,6 +212,8 @@ export default function AirDashboard() {
           )}
         </PixelCard>
       </BlurFade>
+        </>
+      )}
     </div>
   );
 }

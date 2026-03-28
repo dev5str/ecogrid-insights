@@ -18,7 +18,6 @@ export default function HowItWorks() {
             {HOW_IT_WORKS_STEPS.map((step, i) => (
               <BlurFade key={step.label} delay={0.15 + i * 0.1} inView>
                 <div className="relative flex flex-col items-center text-center">
-                  <div className="absolute -top-4 text-6xl font-black text-primary/10">{step.step}</div>
                   <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                     <step.icon className="h-8 w-8" />
                   </div>

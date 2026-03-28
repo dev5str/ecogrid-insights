@@ -1,26 +1,63 @@
 import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+export interface CircularGaugeTooltipDetails {
+  zone: string;
+  lastCollected: string;
+  binId?: string;
+}
 
 interface CircularGaugeProps {
   value: number;
   max?: number;
   label: string;
-  size?: number;
+  /** When set, hover shows a popup with larger bin details. */
+  tooltipDetails?: CircularGaugeTooltipDetails;
 }
 
-export function CircularGauge({ value, max = 100, label }: CircularGaugeProps) {
+export function CircularGauge({ value, max = 100, label, tooltipDetails }: CircularGaugeProps) {
   const pct = Math.min(100, Math.round((value / max) * 100));
   const primary = pct > 90 ? "#ef4444" : pct > 70 ? "#eab308" : "#22c55e";
   const secondary = pct > 90 ? "#ef444420" : pct > 70 ? "#eab30820" : "#22c55e20";
 
-  return (
-    <div className="flex flex-col items-center gap-1.5">
+  const gauge = (
+    <div className="flex flex-col items-center gap-0.5 outline-none">
       <AnimatedCircularProgressBar
         value={pct}
         gaugePrimaryColor={primary}
         gaugeSecondaryColor={secondary}
         className="size-20 text-base"
       />
-      <span className="text-xs text-muted-foreground text-center truncate max-w-[90px]">{label}</span>
+      <span className="text-[10px] leading-tight text-muted-foreground text-center line-clamp-2 max-w-[5.75rem] sm:max-w-[6.25rem] min-h-[2.25rem] px-0.5">
+        {label}
+      </span>
     </div>
+  );
+
+  if (!tooltipDetails) {
+    return gauge;
+  }
+
+  return (
+    <Tooltip delayDuration={250}>
+      <TooltipTrigger asChild>{gauge}</TooltipTrigger>
+      <TooltipContent
+        side="top"
+        className="max-w-[min(20rem,calc(100vw-1.5rem))] border-border/80 bg-popover/95 px-4 py-3 text-popover-foreground shadow-lg backdrop-blur-sm"
+      >
+        <p className="text-lg font-semibold leading-tight tracking-tight">{label}</p>
+        <p className="mt-1 text-3xl font-bold tabular-nums tracking-tight">{pct}%</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          <span className="font-medium text-foreground/90">Zone</span> · {tooltipDetails.zone}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          <span className="font-medium text-foreground/90">Last collected</span> ·{" "}
+          {tooltipDetails.lastCollected}
+        </p>
+        {tooltipDetails.binId ? (
+          <p className="mt-2 font-mono text-xs text-muted-foreground/80">{tooltipDetails.binId}</p>
+        ) : null}
+      </TooltipContent>
+    </Tooltip>
   );
 }

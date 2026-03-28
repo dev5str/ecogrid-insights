@@ -25,6 +25,8 @@ export interface WaterReading {
 
 export interface WasteBin {
   id: string;
+  /** Short label for UI (gauges, alerts). */
+  name: string;
   zone: string;
   fillLevel: number;
   lastCollected: string;
@@ -69,12 +71,16 @@ function generateWaterHistory(): WaterReading[] {
 
 function generateWasteBins(): WasteBin[] {
   return ZONES.flatMap((zone) =>
-    Array.from({ length: 3 }, (_, i) => ({
-      id: `${zone}-Bin-${i + 1}`,
-      zone,
-      fillLevel: randBetween(10, 98),
-      lastCollected: new Date(Date.now() - randBetween(1, 48) * 3600000).toLocaleString(),
-    }))
+    Array.from({ length: 3 }, (_, i) => {
+      const id = `${zone}-Bin-${i + 1}`;
+      return {
+        id,
+        name: id,
+        zone,
+        fillLevel: randBetween(10, 98),
+        lastCollected: new Date(Date.now() - randBetween(1, 48) * 3600000).toLocaleString(),
+      };
+    }),
   );
 }
 
@@ -95,11 +101,22 @@ function getSeverity(module: string, value: number): "normal" | "warning" | "cri
   return "normal";
 }
 
-export function useElectricityData() {
-  const [data, setData] = useState<ElectricityReading[]>(generateElectricityHistory);
+export function useElectricityData(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled !== false;
+  const [data, setData] = useState<ElectricityReading[]>(() => (enabled ? generateElectricityHistory() : []));
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
+    if (!enabled) {
+      setData([]);
+      setAlerts([]);
+      return;
+    }
+    setData(generateElectricityHistory());
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
     const interval = setInterval(() => {
       setData((prev) => {
         const newReading: ElectricityReading = {
@@ -126,20 +143,31 @@ export function useElectricityData() {
       });
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [enabled]);
 
   const currentLoad = data[data.length - 1]?.consumption ?? 0;
-  const peakToday = Math.max(...data.map((d) => d.consumption));
-  const avgConsumption = Math.round(data.reduce((s, d) => s + d.consumption, 0) / data.length);
+  const peakToday = data.length ? Math.max(...data.map((d) => d.consumption)) : 0;
+  const avgConsumption = data.length ? Math.round(data.reduce((s, d) => s + d.consumption, 0) / data.length) : 0;
 
   return { data, alerts, currentLoad, peakToday, avgConsumption };
 }
 
-export function useWaterData() {
-  const [data, setData] = useState<WaterReading[]>(generateWaterHistory);
+export function useWaterData(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled !== false;
+  const [data, setData] = useState<WaterReading[]>(() => (enabled ? generateWaterHistory() : []));
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
+    if (!enabled) {
+      setData([]);
+      setAlerts([]);
+      return;
+    }
+    setData(generateWaterHistory());
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
     const interval = setInterval(() => {
       setData((prev) => {
         const flowRate = randBetween(12, 90);
@@ -171,7 +199,7 @@ export function useWaterData() {
       });
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [enabled]);
 
   const currentFlow = data[data.length - 1]?.flowRate ?? 0;
   const anomalyCount = data.filter((d) => d.anomaly).length;
@@ -179,11 +207,22 @@ export function useWaterData() {
   return { data, alerts, currentFlow, anomalyCount };
 }
 
-export function useWasteData() {
-  const [bins, setBins] = useState<WasteBin[]>(generateWasteBins);
+export function useWasteData(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled !== false;
+  const [bins, setBins] = useState<WasteBin[]>(() => (enabled ? generateWasteBins() : []));
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
+    if (!enabled) {
+      setBins([]);
+      setAlerts([]);
+      return;
+    }
+    setBins(generateWasteBins());
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
     const interval = setInterval(() => {
       setBins((prev) =>
         prev.map((bin) => {
@@ -198,18 +237,18 @@ export function useWasteData() {
                 zone: bin.zone,
                 module: "waste",
                 severity,
-                message: `${bin.id} fill level ${severity === "critical" ? "CRITICAL" : "high"}: ${Math.round(newLevel)}%`,
+                message: `${bin.name} fill level ${severity === "critical" ? "CRITICAL" : "high"}: ${Math.round(newLevel)}%`,
                 value: newLevel,
               },
               ...a.slice(0, 49),
             ]);
           }
           return { ...bin, fillLevel: Math.round(newLevel) };
-        })
+        }),
       );
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [enabled]);
 
   const criticalBins = bins.filter((b) => b.fillLevel > 90).length;
   const warningBins = bins.filter((b) => b.fillLevel > 70 && b.fillLevel <= 90).length;

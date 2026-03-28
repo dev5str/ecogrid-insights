@@ -1,4 +1,6 @@
+import { useMemo } from "react";
 import { useElectricityData, useWaterData, useWasteData } from "@/hooks/useSimulatedData";
+import { useSystemPower } from "@/contexts/SystemPowerContext";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
 import { Zap, Droplets, Trash2, Activity, Server, Wifi } from "lucide-react";
@@ -11,21 +13,32 @@ import {
   ResponsiveContainer, Legend,
 } from "recharts";
 
+function headChartSlotTime(i: number): string {
+  const d = new Date(Date.now() - (9 - i) * 5 * 60000);
+  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+}
+
 export default function HeadDashboard() {
-  const elec = useElectricityData();
-  const water = useWaterData();
-  const waste = useWasteData();
+  const { isOn } = useSystemPower();
+  const elec = useElectricityData({ enabled: isOn("electricity") });
+  const water = useWaterData({ enabled: isOn("water") });
+  const waste = useWasteData({ enabled: isOn("waste") });
 
   const allAlerts = [...elec.alerts, ...water.alerts, ...waste.alerts]
     .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
     .slice(0, 50);
 
-  const comparativeData = elec.data.slice(-10).map((d, i) => ({
-    time: d.time,
-    electricity: d.consumption,
-    water: water.data[water.data.length - 10 + i]?.flowRate ?? 0,
-    waste: waste.bins.reduce((s, b) => s + b.fillLevel, 0) / waste.bins.length,
-  }));
+  const comparativeData = useMemo(() => {
+    const n = 10;
+    const wasteAvg =
+      waste.bins.length > 0 ? waste.bins.reduce((s, b) => s + b.fillLevel, 0) / waste.bins.length : 0;
+    return Array.from({ length: n }, (_, i) => ({
+      time: elec.data.at(-n + i)?.time ?? water.data.at(-n + i)?.time ?? headChartSlotTime(i),
+      electricity: elec.data.at(-n + i)?.consumption ?? 0,
+      water: water.data.at(-n + i)?.flowRate ?? 0,
+      waste: wasteAvg,
+    }));
+  }, [elec.data, water.data, waste.bins]);
 
   return (
     <div className="space-y-6">

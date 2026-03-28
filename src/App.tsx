@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SystemPowerProvider } from "@/contexts/SystemPowerContext";
 
 import Landing from "./pages/Landing";
 import About from "./pages/About";
@@ -31,6 +32,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <SystemPowerProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -70,6 +72,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </SystemPowerProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

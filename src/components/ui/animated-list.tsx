@@ -10,7 +10,7 @@ export function AnimatedListItem({ children }: { children: React.ReactNode }) {
     transition: { type: "spring", stiffness: 350, damping: 40 },
   };
   return (
-    <motion.div {...animations} layout className="mx-auto w-full">
+    <motion.div {...animations} layout className="w-full min-w-0">
       {children}
     </motion.div>
   );
@@ -36,13 +36,14 @@ export const AnimatedList = React.memo(
       return () => { if (timeout !== null) clearTimeout(timeout); };
     }, [index, delay, childrenArray.length]);
 
+    /** Children should be ordered newest-first; we reveal from newest downward (no reverse). */
     const itemsToShow = useMemo(
-      () => childrenArray.slice(0, index + 1).reverse(),
-      [index, childrenArray]
+      () => childrenArray.slice(0, index + 1),
+      [index, childrenArray],
     );
 
     return (
-      <div className={cn("flex flex-col items-center gap-4", className)} {...props}>
+      <div className={cn("flex w-full min-w-0 flex-col items-stretch gap-3", className)} {...props}>
         <AnimatePresence>
           {itemsToShow.map((item) => (
             <AnimatedListItem key={(item as React.ReactElement).key}>

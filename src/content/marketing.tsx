@@ -59,25 +59,21 @@ export const HOW_IT_WORKS_STEPS: {
   icon: LucideIcon;
   label: string;
   desc: string;
-  step: string;
 }[] = [
   {
     icon: Wifi,
     label: "IoT Sensors",
     desc: "ESP32/Arduino sensors deployed across campus zones collect electricity, water, and waste data continuously.",
-    step: "01",
   },
   {
     icon: Cloud,
     label: "Cloud Processing",
     desc: "Data is transmitted via MQTT/HTTP to Firebase cloud, where it's processed, analyzed, and stored securely.",
-    step: "02",
   },
   {
     icon: Monitor,
     label: "Live Dashboard",
     desc: "Role-based web dashboard visualizes data in real-time with charts, alerts, and actionable insights.",
-    step: "03",
   },
 ];
 

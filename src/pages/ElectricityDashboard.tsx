@@ -1,6 +1,8 @@
 import { useElectricityData } from "@/hooks/useSimulatedData";
+import { useSystemPower } from "@/contexts/SystemPowerContext";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
+import { SystemModuleOffline } from "@/components/dashboard/SystemModuleOffline";
 import { Zap, TrendingUp, Activity, Gauge } from "lucide-react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { PixelCard } from "@/components/ui/pixel-card";
@@ -10,7 +12,9 @@ import {
 } from "recharts";
 
 export default function ElectricityDashboard() {
-  const { data, alerts, currentLoad, peakToday, avgConsumption } = useElectricityData();
+  const { isOn } = useSystemPower();
+  const powered = isOn("electricity");
+  const { data, alerts, currentLoad, peakToday, avgConsumption } = useElectricityData({ enabled: powered });
 
   const severity =
     currentLoad > 340 ? "critical" : currentLoad > 280 ? "warning" : "normal";
@@ -27,6 +31,13 @@ export default function ElectricityDashboard() {
         </div>
       </BlurFade>
 
+      {!powered ? (
+        <SystemModuleOffline
+          title="Electricity monitoring is off"
+          description="Live meters, charts, and alerts for this module stay disabled until you turn the electricity system on in the top bar."
+        />
+      ) : (
+        <>
       <BlurFade delay={0.1}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatusCard title="Current Load" value={`${currentLoad} kW`} icon={Zap} severity={severity} subtitle="Live reading" />
@@ -73,6 +84,8 @@ export default function ElectricityDashboard() {
           <AlertFeed alerts={alerts} title="Electricity Alerts" />
         </BlurFade>
       </div>
+        </>
+      )}
     </div>
   );
 }
