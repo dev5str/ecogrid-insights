@@ -93,7 +93,7 @@ Browser (React SPA)
 ```
 
 - **No global server** in-repo: `fetch` to Ollama in production hits the browser origin or configured `VITE_OLLAMA_URL`; in **development**, Vite proxies `/api/ollama/*` to Ollama to reduce CORS friction.
-- **Firebase** initializes from `src/lib/firebase.ts`; waste listener lives in `useFirebaseWasteData`.
+- **Firebase** initializes from `src/firebase.js`; waste listener lives in `useFirebaseWasteData`.
 
 ---
 
@@ -109,7 +109,8 @@ Browser (React SPA)
 | `src/components/brand/` | Logo component |
 | `src/contexts/` | `AuthContext`, `SystemPowerContext`, `CampusEngagementContext` |
 | `src/hooks/` | `useSimulatedData`, `useFirebaseWasteData`, `useDevices`, `useZoneTelemetry`, `useSustainabilitySimulation`, `useCampusEngagement`, etc. |
-| `src/lib/` | `utils`, `api` stubs, `firebase`, `csvExport`, `geminiComplianceReport` (Ollama compliance narrative), `compliancePrint`, `campusZones`, etc. |
+| `src/lib/` | `utils`, `api` stubs, `csvExport`, `geminiComplianceReport` (Ollama compliance narrative), `compliancePrint`, `campusZones`, etc. |
+| `src/firebase.js` | Firebase app, Firestore `db`, Analytics |
 | `public/` | Static assets (favicon, fonts, logo) |
 | `vite.config.ts` | Aliases, dev server, **Ollama dev proxy** |
 | `vercel.json` | SPA rewrites for static hosting |
@@ -277,7 +278,7 @@ pnpm test           # vitest
 ## 18. Waste bins: Firestore integration
 
 **Hook:** `src/hooks/useFirebaseWasteData.ts`  
-**Config:** `src/lib/firebase.ts`
+**Config:** `src/firebase.js`
 
 - Collection **`bins`**: documents with fill fields such as `fillLevel`, `level`, `value`, or `percentage`; optional `zone`, `location`, `name`, etc.
 - The UI presents **15** logical bins: **`bin1`** maps to the **first** Firestore document (sorted by id) and is labeled **MG Audi** in the UI; **`bin2`–`bin15`** may be **synthetic** with campus-style names when Firestore does not supply enough documents.

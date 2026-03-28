@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/firebase";
 import type { Alert, WasteBin } from "@/hooks/useSimulatedData";
 
 /** Live Firestore bin always shown with this label. */
