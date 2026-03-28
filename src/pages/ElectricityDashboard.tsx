@@ -1,6 +1,11 @@
+import { useMemo } from "react";
 import { useElectricityData } from "@/hooks/useSimulatedData";
 import { useSystemPower } from "@/contexts/SystemPowerContext";
 import { useZoneTelemetry } from "@/hooks/useZoneTelemetry";
+import {
+  LIVE_ELECTRICITY_ZONE,
+  useFirebaseMq135Electrical,
+} from "@/hooks/useFirebaseMq135Electrical";
 import { useElectricityAnomalies } from "@/hooks/useSustainabilitySimulation";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { AlertFeed } from "@/components/dashboard/AlertFeed";
@@ -17,8 +22,39 @@ export default function ElectricityDashboard() {
   const { isOn } = useSystemPower();
   const powered = isOn("electricity");
   const { data, alerts, currentLoad, peakToday, avgConsumption } = useElectricityData({ enabled: powered });
-  const zoneLoads = useZoneTelemetry("electricity", powered);
+  const zoneSim = useZoneTelemetry("electricity", powered);
+  const { reading: mq135Elec, isLive: mq135Live, dataSource: mq135Source } = useFirebaseMq135Electrical({
+    enabled: powered,
+  });
   const { anomalies } = useElectricityAnomalies(powered);
+
+  const zoneLoads = useMemo(() => {
+    const simRows = zoneSim.map((z) => ({ zone: z.zone, value: z.value }));
+    if (!mq135Live) {
+      return [
+        {
+          zone: LIVE_ELECTRICITY_ZONE,
+          value: 0,
+          segmentMax: 200,
+          rightLabel: "Live: waiting for environment/air (currentMA, totalPowerMW, …)",
+        },
+        ...simRows,
+      ];
+    }
+    const r = mq135Elec;
+    const totalMw =
+      r.totalPowerMw > 0 ? r.totalPowerMw : r.supplyVoltage > 0 && r.currentMA > 0 ? r.supplyVoltage * r.currentMA : 0;
+    const barMax = Math.max(2, totalMw * 1.25);
+    return [
+      {
+        zone: LIVE_ELECTRICITY_ZONE,
+        value: totalMw,
+        segmentMax: barMax,
+        rightLabel: `${r.totalPowerMw.toFixed(3)} mW tot · load ${r.loadPowerMw.toFixed(3)} · sens ${r.sensorPowerMw.toFixed(3)} mW · ${r.currentMA.toFixed(3)} mA · ${r.supplyVoltage} V · ${r.loadResistanceKohm} kΩ`,
+      },
+      ...simRows,
+    ];
+  }, [mq135Live, mq135Elec, zoneSim]);
 
   const severity =
     currentLoad > 340 ? "critical" : currentLoad > 280 ? "warning" : "normal";
@@ -47,14 +83,31 @@ export default function ElectricityDashboard() {
           <StatusCard title="Current Load" value={`${currentLoad} kW`} icon={Zap} severity={severity} subtitle="Live reading" />
           <StatusCard title="Peak Today" value={`${peakToday} kW`} icon={TrendingUp} severity={peakToday > 340 ? "critical" : "normal"} subtitle="Maximum recorded" />
           <StatusCard title="Average" value={`${avgConsumption} kW`} icon={Activity} subtitle="Rolling average" />
-          <StatusCard title="Active Meters" value="48" icon={Gauge} subtitle="All zones online" />
+          <StatusCard
+            title={mq135Live ? `${LIVE_ELECTRICITY_ZONE} (MQ135)` : "Active Meters"}
+            value={
+              mq135Live
+                ? `${mq135Elec.totalPowerMw.toFixed(3)} mW`
+                : "48"
+            }
+            icon={Gauge}
+            subtitle={
+              mq135Live
+                ? `${mq135Elec.currentMA.toFixed(3)} mA @ ${mq135Elec.supplyVoltage} V · ${mq135Source ?? "environment"}`
+                : "All zones online"
+            }
+          />
         </div>
       </BlurFade>
 
       <BlurFade delay={0.12}>
         <ZoneBreakdown
           title="Load by campus zone"
-          subtitle="University zones - live simulated kW per feeder (segmented load view)"
+          subtitle={
+            mq135Live
+              ? `${LIVE_ELECTRICITY_ZONE}: live MQ135 electrical fields from Firebase (mW / mA / V). Other rows: simulated kW.`
+              : `${LIVE_ELECTRICITY_ZONE}: connect Firestore \`environment/air\` (or other \`environment/*\`) with currentMA, totalPowerMW, etc. Other rows: simulated kW.`
+          }
           unit="kW"
           accentClass="bg-yellow-400"
           mode="segmented"

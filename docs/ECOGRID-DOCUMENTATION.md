@@ -209,7 +209,7 @@ For long **text-only** drafts, a text-focused model (e.g. `llama3.2`) may behave
 
 ## 12. Zone telemetry and dashboards
 
-Several dashboards use **zone breakdown** components and hooks such as `useZoneTelemetry` and `ZoneBreakdown` / `SegmentedProgress` for multi-zone views (electricity, water, air). Values remain **simulated** unless wired to a backend.
+Several dashboards use **zone breakdown** components and hooks such as `useZoneTelemetry` and `ZoneBreakdown` / `SegmentedProgress` for multi-zone views (electricity, water, air). **Electricity:** **`MG Audi`** is live from Firestore **`environment`** (MQ135 electrical fields on **`environment/air`** when present); other zone rows stay simulated kW. **Air / waste** use their own Firebase hooks where documented.
 
 ---
 
@@ -360,6 +360,8 @@ Use **`POST /api/v1/devices/:id/readings`** once the API exists, or write direct
 ## 20. Air quality: MQ135, Arduino Uno, and Bluetooth
 
 This section explains a practical lab setup: **MQ135** as a broad **gas / air-quality proxy**, **Arduino Uno** for analog read and logic, and a **Bluetooth serial module** to send readings to a phone or PC. The **Air** page (`/air`) reads live metrics when the air system is on. **Primary (ESP8266):** document **`environment/air`** with **`airValue`** (integer, raw MQ135 ADC 0–1023) and **`airStatus`** (`GOOD` / `BAD`, threshold 250 in typical firmware). The gauge uses **ADC** scale (max 1023); **BAD** maps to at least Moderate. **Fallbacks:** other docs under collection **`environment`** (latest by time fields), then **`airReadings`**, then collection **`air`**. Legacy fields **gas** / **ppm** / **value** still work (600 PPM scale). Simulated zone rows are scaled to match when ADC mode is active.
+
+The **Electricity** page (`/electricity`) uses the **same** Firestore **`environment`** data for a live **MG Audi** row when you publish **electrical** fields on the MQ135 path (typically the same **`environment/air`** doc): **`currentMA`**, **`totalPowerMW`**, **`loadPowerMW`**, **`sensorPowerMW`**, **`supplyVoltage`**, **`loadResistanceKohm`**. The UI treats numeric `*PowerMW` values as **milliwatts (mW)** (matches \(V \times I\) when `supplyVoltage` is in V and `currentMA` is mA). All other electricity zone bars remain **simulated kW**.
 
 **Roles:** **MQ135** = sensor (does not purify air). An **air purifier** is a separate device; you can **control** it (e.g. relay on fan power) from the Arduino when readings cross a threshold, or run the purifier independently.
 
