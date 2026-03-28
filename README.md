@@ -8,7 +8,8 @@ A real-time IoT-based environmental monitoring system for detecting and reducing
 - **UI**: Tailwind CSS + shadcn/ui + Magic UI
 - **Charts**: Recharts
 - **Routing**: React Router v6
-- **State**: TanStack React Query
+- **State**: React context and custom hooks (no React Query in the current app)
+- **Optional data**: Firebase Firestore (waste bins), local Ollama for sustainability compliance drafts
 
 ## Getting Started
 
@@ -26,12 +27,10 @@ This repo is configured for [Vercel](https://vercel.com): `pnpm` install, `vite 
 3. Leave defaults (or confirm **Install Command** `pnpm install --frozen-lockfile`, **Build Command** `pnpm run build`, **Output Directory** `dist`).
 4. Deploy.
 
-    ## Documentation
+## Documentation
 
-**Full project documentation** : architecture, what is simulated vs real, API stubs, and a **detailed Arduino + ultrasonic waste-bin guide** : is in:
-
-**[docs/ECOGRID-DOCUMENTATION.md](docs/ECOGRID-DOCUMENTATION.md)**
+Full project documentation (architecture, simulated vs live data, Ollama and env vars, Firebase waste, API stubs, deployment, and an Arduino + ultrasonic waste-bin guide) lives in **[docs/ECOGRID-DOCUMENTATION.md](docs/ECOGRID-DOCUMENTATION.md)**.
 
 ## IoT integration
 
-The dashboard UI is wired to **client-side API stubs** (`src/lib/api.ts`) for future REST/WebSocket backends. The **Devices** page lists example endpoints. **Electricity and water** in the app are **simulations**; **waste fill levels** are **simulated** until you connect real hardware and a backend : see the doc above for hardware and calibration.
+The dashboard UI is wired to **client-side API stubs** (`src/lib/api.ts`) for future REST/WebSocket backends. The **Devices** page lists example endpoints. **Electricity and water** in the app are **simulations**; **waste** can use **Firestore** or stay partly simulated. See the doc above for hardware and calibration.
