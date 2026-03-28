@@ -1,11 +1,16 @@
 /**
  * Drafts NAAC / ISO 14001–style narrative via **local Ollama** (`/api/chat`), default model **llava**.
  *
- * **Development:** uses `/api/ollama/api/chat` (Vite proxy → `OLLAMA_HOST` or `http://127.0.0.1:11434`).
- * **Production / preview:** calls `VITE_OLLAMA_URL` (e.g. `http://127.0.0.1:11434`); set Ollama `OLLAMA_ORIGINS` if the browser blocks CORS.
+ * **Endpoint:** Sustainability → Compliance tab can set a **browser-stored** base URL (ngrok / Cloudflare Tunnel) via
+ * `ollamaEndpointSettings.ts`; that overrides the dev proxy and `VITE_OLLAMA_URL`.
  *
- * Optional `.env.local`: `VITE_OLLAMA_MODEL=llava` (or `llava:7b`, etc.), `OLLAMA_HOST=http://127.0.0.1:11434` for the dev proxy target.
+ * **Development:** default `/api/ollama/api/chat` (Vite proxy → `OLLAMA_HOST` or `http://127.0.0.1:11434`).
+ * **Production / preview:** `VITE_OLLAMA_URL` unless overridden in the UI. Set Ollama `OLLAMA_ORIGINS` for CORS.
+ *
+ * Optional `.env.local`: `VITE_OLLAMA_MODEL=llava`, `OLLAMA_HOST=...` for the dev proxy target.
  */
+import { resolveOllamaChatUrl } from "@/lib/ollamaEndpointSettings";
+
 function normalizeEnvValue(raw: string | undefined): string {
   let s = (raw ?? "").trim();
   if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
@@ -15,14 +20,6 @@ function normalizeEnvValue(raw: string | undefined): string {
 }
 
 const OLLAMA_MODEL = normalizeEnvValue(import.meta.env.VITE_OLLAMA_MODEL as string | undefined) || "llava";
-
-function ollamaChatUrl(): string {
-  if (import.meta.env.DEV) {
-    return "/api/ollama/api/chat";
-  }
-  const base = normalizeEnvValue(import.meta.env.VITE_OLLAMA_URL as string | undefined) || "http://127.0.0.1:11434";
-  return `${base.replace(/\/$/, "")}/api/chat`;
-}
 
 export interface GeminiComplianceMetrics {
   institutionName: string;
@@ -69,13 +66,21 @@ type OllamaChatResponse = {
   error?: string;
 };
 
+function headersForOllamaRequest(url: string): Record<string, string> {
+  const h: Record<string, string> = { "Content-Type": "application/json" };
+  if (/ngrok(-free)?\.(app|dev)/i.test(url)) {
+    h["ngrok-skip-browser-warning"] = "69420";
+  }
+  return h;
+}
+
 export async function fetchGeminiComplianceNarrative(metrics: GeminiComplianceMetrics): Promise<string> {
   const prompt = buildPrompt(metrics);
-  const url = ollamaChatUrl();
+  const url = resolveOllamaChatUrl();
 
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: headersForOllamaRequest(url),
     body: JSON.stringify({
       model: OLLAMA_MODEL,
       messages: [{ role: "user", content: prompt }],

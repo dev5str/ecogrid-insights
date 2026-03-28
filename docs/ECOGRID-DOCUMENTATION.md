@@ -110,7 +110,7 @@ Browser (React SPA)
 | `src/components/brand/` | Logo component |
 | `src/contexts/` | `AuthContext`, `SystemPowerContext`, `CampusEngagementContext` |
 | `src/hooks/` | `useSimulatedData`, `useFirebaseWasteData`, `useDevices`, `useZoneTelemetry`, `useSustainabilitySimulation`, `useCampusEngagement`, etc. |
-| `src/lib/` | `utils`, `api` stubs, `csvExport`, `geminiComplianceReport` (Ollama compliance narrative), `compliancePrint`, `campusZones`, etc. |
+| `src/lib/` | `utils`, `api` stubs, `csvExport`, `ollamaEndpointSettings`, `geminiComplianceReport` (Ollama compliance narrative), `compliancePrint`, `campusZones`, etc. |
 | `src/firebase.js` | Firebase app, Firestore `db`, Analytics |
 | `public/` | Static assets (favicon, fonts, logo) |
 | `vite.config.ts` | Aliases, dev server, **Ollama dev proxy** |
@@ -182,9 +182,10 @@ Devices are **demo state** in memory. `deviceApi` targets `/api/v1/...` and retu
 - **Page:** `src/pages/SustainabilityInsightsPage.tsx`
 - **Metrics:** Driven by sustainability simulation hooks and UI state (leaderboard, carbon story, etc.).
 - **CSV:** `src/lib/csvExport.ts` (and related helpers) for downloadable extracts where exposed in the UI.
-- **Compliance narrative:** `src/lib/geminiComplianceReport.ts` (name is historical) calls **Ollama**:
-  - **Development:** `POST /api/ollama/api/chat` → Vite proxy → `OLLAMA_HOST` or `VITE_OLLAMA_URL` or `http://127.0.0.1:11434`
-  - **Production build:** `POST {VITE_OLLAMA_URL}/api/chat` (default base `http://127.0.0.1:11434` if unset)
+- **Compliance narrative:** `src/lib/geminiComplianceReport.ts` (name is historical) calls **Ollama** via `src/lib/ollamaEndpointSettings.ts` (`resolveOllamaChatUrl`):
+  - **Browser override (any environment):** Sustainability → **Compliance** tab → **Ollama API base URL** saves an **https** (or http) **origin** in **`localStorage`** (e.g. ngrok or Cloudflare Tunnel to port 11434). That wins over the dev proxy and `VITE_OLLAMA_URL`. Append **`/api/chat`** in code only; do not paste `/api/chat` in the field.
+  - **Development (no override):** `POST /api/ollama/api/chat` → Vite proxy → `OLLAMA_HOST` or `VITE_OLLAMA_URL` or `http://127.0.0.1:11434`
+  - **Production build (no override):** `POST {VITE_OLLAMA_URL}/api/chat` (default base `http://127.0.0.1:11434` if unset)
   - **Model:** `VITE_OLLAMA_MODEL` or default **`llava`**
 - **Print / PDF:** `src/lib/compliancePrint.ts` opens a print window with escaped HTML. The **Source** line was removed from the AI-assisted template; narrative text is passed through `stripNarrativeForPrint` to remove leading `## ` and `- ` prefixes per line for cleaner print output.
 
@@ -281,8 +282,7 @@ pnpm test           # vitest
 **Hook:** `src/hooks/useFirebaseWasteData.ts`  
 **Config:** `src/firebase.js`
 
-- Collection **`bins`**: documents such as **`bin1`**, **`bin2`**, **`bin3`** (ESP8266 `patchDocument` paths). Fields: **`fillLevel`** (integer 0–100), optional **`status`** (e.g. CRITICAL / WARNING / NORMAL), **`distance`**, plus optional `zone` / `location`. Sorted by document id; all Firestore bins are shown, then **synthetic** bins pad to **15** total.
-- **`bin1`** is labeled **MG Audi** in the UI; other ids like **`bin2`** show as **Bin 2**, etc.
+- Collection **`bins`**: ESP8266 may patch **`bin1`**, **`bin2`**, **`bin3`**. The **dashboard reads only `bin1`** for live fill (**MG Audi**). **`bin2`** and **`bin3`** are **always simulated** in the UI (animated fill); Firestore writes to `bin2`/`bin3` are ignored for that grid. **`bin4`…`bin15`**: simulated campus names. Fields on **`bin1`**: **`fillLevel`**, optional **`status`**, **`distance`**, etc.
 - Collection **`alerts`**: waste-related documents merge into the feed; local thresholds can still generate alerts when fill crosses warning/critical bands.
 
 If **no** `bins` documents exist, live **MG Audi** can show **0%** as a placeholder.

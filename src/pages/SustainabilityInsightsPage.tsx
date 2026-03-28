@@ -14,7 +14,16 @@ import { Badge } from "@/components/ui/badge";
 import { downloadCsv, rowsToCsv } from "@/lib/csvExport";
 import { openComplianceReportWithGeminiNarrative } from "@/lib/compliancePrint";
 import { fetchGeminiComplianceNarrative, type GeminiComplianceMetrics } from "@/lib/geminiComplianceReport";
-import { Leaf, Trophy, FileDown, FileText, Zap, BarChart3, Loader2 } from "lucide-react";
+import {
+  clearOllamaBaseUrlOverride,
+  getOllamaBaseUrlOverride,
+  getOllamaEndpointDisplayBase,
+  isValidOllamaBaseUrl,
+  setOllamaBaseUrlOverride,
+} from "@/lib/ollamaEndpointSettings";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Leaf, Trophy, FileDown, FileText, Zap, BarChart3, Loader2, Globe } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
 import { toast } from "sonner";
 
@@ -23,6 +32,30 @@ export default function SustainabilityInsightsPage() {
   const carbon = useCarbonFootprint(true);
   const { anomalies } = useElectricityAnomalies(true);
   const [complianceLoading, setComplianceLoading] = useState(false);
+  const [ollamaUrlDraft, setOllamaUrlDraft] = useState(() => getOllamaBaseUrlOverride());
+  const [ollamaEndpointTick, setOllamaEndpointTick] = useState(0);
+  const ollamaEffectiveBase = useMemo(() => {
+    void ollamaEndpointTick;
+    return getOllamaEndpointDisplayBase();
+  }, [ollamaEndpointTick]);
+
+  const saveOllamaEndpoint = () => {
+    const t = ollamaUrlDraft.trim();
+    if (t && !isValidOllamaBaseUrl(t)) {
+      toast.error("Use a valid http(s) base URL (e.g. https://your-tunnel.example). No /api/chat path.");
+      return;
+    }
+    setOllamaBaseUrlOverride(t);
+    setOllamaEndpointTick((n) => n + 1);
+    toast.success(t ? "Ollama base URL saved in this browser" : "Cleared: using default endpoint (env / dev proxy)");
+  };
+
+  const clearOllamaEndpoint = () => {
+    setOllamaUrlDraft("");
+    clearOllamaBaseUrlOverride();
+    setOllamaEndpointTick((n) => n + 1);
+    toast.message("Ollama URL cleared for this browser");
+  };
 
   const carbonBreakdown = useMemo(
     () => [
@@ -262,8 +295,9 @@ export default function SustainabilityInsightsPage() {
                 <div>
                   <h2 className="text-base font-semibold">Automated compliance draft</h2>
                   <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                    Sends simulated dashboard metrics to <strong>local Ollama</strong> (default model <code className="text-xs">llava</code>), returns a draft narrative, then
-                    opens a print-ready page. Save as PDF from the browser print dialog.
+                    Sends simulated dashboard metrics to <strong>Ollama</strong> (default model <code className="text-xs">llava</code>), returns a draft narrative, then opens a
+                    print-ready page. Save as PDF from the browser print dialog. Use the section below to point at a public tunnel (ngrok, cloudflared) so generation works from
+                    any device.
                   </p>
                   <ul className="mt-3 list-inside list-disc text-xs text-muted-foreground">
                     <li>Uses live leaderboard, carbon split, and sample electricity anomalies from this page</li>
@@ -280,6 +314,49 @@ export default function SustainabilityInsightsPage() {
                   {complianceLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                   {complianceLoading ? "Generating…" : "Generate printable report"}
                 </Button>
+              </div>
+
+              <div className="mt-6 border-t border-border/40 pt-5">
+                <h3 className="flex items-center gap-2 text-sm font-semibold">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  Ollama API base URL
+                </h3>
+                <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+                  Optional. Paste the <strong>origin only</strong> for a tunnel that forwards to Ollama (port 11434), e.g.{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">https://abc123.ngrok-free.app</code> or your Cloudflare Tunnel URL. Do{" "}
+                  <strong>not</strong> add <code className="text-[11px]">/api/chat</code>. Stored in <code className="text-[11px]">localStorage</code> for this browser only.
+                  On the tunnel host, set <code className="text-[11px]">OLLAMA_ORIGINS</code> to allow your site origin for CORS.
+                </p>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Label htmlFor="ollama-endpoint" className="text-xs">
+                      Base URL (https://…)
+                    </Label>
+                    <Input
+                      id="ollama-endpoint"
+                      type="url"
+                      inputMode="url"
+                      autoComplete="off"
+                      placeholder="https://your-tunnel.example or leave empty for default"
+                      value={ollamaUrlDraft}
+                      onChange={(e) => setOllamaUrlDraft(e.target.value)}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <Button type="button" variant="secondary" size="sm" onClick={saveOllamaEndpoint}>
+                      Save endpoint
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={clearOllamaEndpoint}>
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground/80">Requests go to:</span>{" "}
+                  <span className="break-all font-mono text-foreground/90">{ollamaEffectiveBase}</span>
+                  <span className="font-mono text-muted-foreground">/api/chat</span>
+                </p>
               </div>
             </PixelCard>
           </TabsContent>

@@ -28,16 +28,24 @@ function randBetween(min: number, max: number) {
   return Math.round((Math.random() * (max - min) + min) * 10) / 10;
 }
 
-/** Simulated bins `bin{startNumber}…` for UI padding (ESP sketch uses `bins/bin1`…`bin3`). */
+/** Labels for simulated bins: `bin2` / `bin3` stay as Bin 2 / Bin 3; `bin4+` use campus place names. */
+function simulatedBinNameAndZone(binNum: number): { name: string; zone: string } {
+  if (binNum === 2) return { name: "Bin 2", zone: "Bin 2" };
+  if (binNum === 3) return { name: "Bin 3", zone: "Bin 3" };
+  const nameIndex = Math.max(0, binNum - 4) % SIM_LOCATION_NAMES.length;
+  const name = SIM_LOCATION_NAMES[nameIndex] ?? `Zone ${binNum}`;
+  return { name, zone: name };
+}
+
+/** Simulated bins `bin{startNumber}…` for UI padding. Only **bin1** is live from Firestore; bin2–bin3 are always simulated. */
 function initialSimulatedBinsFrom(startBinNumber: number, count: number): WasteBin[] {
   return Array.from({ length: count }, (_, i) => {
     const binNum = startBinNumber + i;
-    const nameIndex = Math.max(0, binNum - 2) % SIM_LOCATION_NAMES.length;
-    const name = SIM_LOCATION_NAMES[nameIndex] ?? `Zone ${binNum}`;
+    const { name, zone } = simulatedBinNameAndZone(binNum);
     return {
       id: `bin${binNum}`,
       name,
-      zone: name,
+      zone,
       fillLevel: randBetween(12, 55),
       lastCollected: new Date(Date.now() - randBetween(1, 48) * 3600000).toLocaleString(),
     };
@@ -71,13 +79,6 @@ function wasteBinFromFirestoreDoc(docSnap: QueryDocumentSnapshot): WasteBin {
           ? data.lastCollected.toLocaleString()
           : "",
   };
-}
-
-function maxBinNumericId(bins: WasteBin[]): number {
-  return bins.reduce((m, b) => {
-    const n = /^bin(\d+)$/i.exec(b.id);
-    return n ? Math.max(m, parseInt(n[1], 10)) : m;
-  }, 0);
 }
 
 function toDate(value: unknown): Date {
@@ -169,8 +170,9 @@ const EMPTY_LIVE_BIN: WasteBin = {
 };
 
 /**
- * Up to **15** bins: all Firestore `bins/*` docs (sorted by id, e.g. ESP8266 `bin1`…`bin3`), padded with simulated bins.
- * When Firestore is empty, **bin1** shows as MG Audi at 0% plus simulated **bin2**…**bin15**.
+ * **15** bins: only **`bins/bin1`** is read from Firestore (MG Audi). **`bin2`** and **`bin3`** are always simulated
+ * (ESP can still write them; the dashboard ignores those docs for fill display). **`bin4`…`bin15`**: simulated.
+ * When `bin1` is missing, MG Audi shows 0% as placeholder plus simulated **bin2**…**bin15**.
  */
 export function useFirebaseWasteData(options?: { enabled?: boolean }) {
   const enabled = options?.enabled !== false;
@@ -213,8 +215,8 @@ export function useFirebaseWasteData(options?: { enabled?: boolean }) {
         setRealtimeBins([]);
         return;
       }
-      const sorted = [...snapshot.docs].sort((a, b) => a.id.localeCompare(b.id));
-      setRealtimeBins(sorted.map((d) => wasteBinFromFirestoreDoc(d)));
+      const bin1Doc = snapshot.docs.find((d) => d.id === "bin1");
+      setRealtimeBins(bin1Doc ? [wasteBinFromFirestoreDoc(bin1Doc)] : []);
     });
 
     const unsubscribeAlerts = onSnapshot(alertsRef, (snapshot) => {
@@ -331,14 +333,9 @@ export function useFirebaseWasteData(options?: { enabled?: boolean }) {
   const liveLayout = useMemo(() => {
     if (!enabled) return { live: [] as WasteBin[], simStart: 2, simCount: 0 };
     if (realtimeBins.length === 0) {
-      return { live: [EMPTY_LIVE_BIN], simStart: 2, simCount: SIM_LOCATION_NAMES.length };
+      return { live: [EMPTY_LIVE_BIN], simStart: 2, simCount: 14 };
     }
-    const maxN = maxBinNumericId(realtimeBins);
-    return {
-      live: realtimeBins,
-      simStart: maxN + 1,
-      simCount: Math.max(0, 15 - realtimeBins.length),
-    };
+    return { live: realtimeBins, simStart: 2, simCount: 14 };
   }, [enabled, realtimeBins]);
 
   useEffect(() => {
