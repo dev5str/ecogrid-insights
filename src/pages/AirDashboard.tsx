@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useSystemPower } from "@/contexts/SystemPowerContext";
 import { SystemModuleOffline } from "@/components/dashboard/SystemModuleOffline";
 import { Wind, Droplets, Thermometer, ShieldAlert, Gauge } from "lucide-react";
@@ -8,33 +8,15 @@ import { PixelCard } from "@/components/ui/pixel-card";
 import { StatusCard } from "@/components/dashboard/StatusCard";
 import { ZoneBreakdown } from "@/components/dashboard/ZoneBreakdown";
 import { useZoneTelemetry } from "@/hooks/useZoneTelemetry";
-
-type AirStatus = "Good" | "Moderate" | "Dangerous";
-
-interface AirReading {
-  gas: number;
-  humidity: number;
-  temperature: number;
-  status: AirStatus;
-}
-
-function getStatus(gas: number): AirStatus {
-  if (gas > 450) return "Dangerous";
-  if (gas > 300) return "Moderate";
-  return "Good";
-}
+import { useFirebaseAirData } from "@/hooks/useFirebaseAirData";
 
 function clamp(num: number, min: number, max: number) {
   return Math.min(max, Math.max(min, num));
 }
 
-function randomDelayMs() {
-  return 3000 + Math.floor(Math.random() * 2000);
-}
-
 const MAX_GAS_PPM = 600;
 
-function describeStatus(status: AirStatus) {
+function describeStatus(status: "Good" | "Moderate" | "Dangerous") {
   if (status === "Dangerous") return "critical";
   if (status === "Moderate") return "warning";
   return "normal";
@@ -43,46 +25,7 @@ function describeStatus(status: AirStatus) {
 export default function AirDashboard() {
   const { isOn } = useSystemPower();
   const powered = isOn("air");
-
-  const [reading, setReading] = useState<AirReading>(() => {
-    const gas = 265;
-    return {
-      gas,
-      humidity: 49,
-      temperature: 28.1,
-      status: getStatus(gas),
-    };
-  });
-
-  useEffect(() => {
-    if (!powered) return;
-    let timeoutId: number | undefined;
-    let stopped = false;
-
-    const tick = () => {
-      if (stopped) return;
-      setReading((prev) => {
-        const gas = Math.round(clamp(prev.gas + (Math.random() * 120 - 60), 120, 560));
-        const humidity = Number(clamp(prev.humidity + (Math.random() * 6 - 3), 30, 85).toFixed(1));
-        const temperature = Number(
-          clamp(prev.temperature + (Math.random() * 1.6 - 0.8), 18, 42).toFixed(1),
-        );
-        return {
-          gas,
-          humidity,
-          temperature,
-          status: getStatus(gas),
-        };
-      });
-      timeoutId = window.setTimeout(tick, randomDelayMs());
-    };
-
-    timeoutId = window.setTimeout(tick, randomDelayMs());
-    return () => {
-      stopped = true;
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
-  }, [powered]);
+  const { reading, isLive } = useFirebaseAirData({ enabled: powered });
 
   const zoneAir = useZoneTelemetry("air", powered);
 
@@ -146,7 +89,7 @@ export default function AirDashboard() {
             Air Purifier Dashboard
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Real-time indoor air quality simulation using MQ135 + DHT-style readings
+            Real-time indoor air quality from Firebase (MQ135 + DHT readings)
           </p>
         </div>
       </BlurFade>
@@ -164,6 +107,9 @@ export default function AirDashboard() {
             <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
             Gas Concentration Gauge
           </h3>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Source: {isLive ? "Live Firebase" : "Waiting for Firebase data"}
+          </p>
           <div className="relative mx-auto w-full max-w-[420px]">
             <GaugeComponent {...airGaugeProps} />
           </div>
@@ -183,7 +129,7 @@ export default function AirDashboard() {
       <BlurFade delay={0.14}>
         <ZoneBreakdown
           title="Air quality by zone"
-          subtitle="MQ135-style gas PPM - per campus zone (simulated, segmented view)"
+          subtitle="MQ135-style gas PPM - per campus zone"
           unit="ppm"
           accentClass="bg-sky-400"
           mode="segmented"
@@ -194,10 +140,10 @@ export default function AirDashboard() {
 
       <BlurFade delay={0.15}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatusCard title="Gas Level" value={`${reading.gas} PPM`} icon={Gauge} severity={severity} subtitle="MQ135 simulated" />
-          <StatusCard title="Humidity" value={`${reading.humidity}%`} icon={Droplets} subtitle="DHT simulated" />
-          <StatusCard title="Temperature" value={`${reading.temperature}°C`} icon={Thermometer} subtitle="DHT simulated" />
-          <StatusCard title="Air Status" value={reading.status} icon={ShieldAlert} severity={severity} subtitle="Computed from gas value" />
+          <StatusCard title="Gas Level" value={`${reading.gas} PPM`} icon={Gauge} severity={severity} subtitle="MQ135 from Firebase" />
+          <StatusCard title="Humidity" value={`${reading.humidity}%`} icon={Droplets} subtitle="DHT from Firebase" />
+          <StatusCard title="Temperature" value={`${reading.temperature}°C`} icon={Thermometer} subtitle="DHT from Firebase" />
+          <StatusCard title="Air Status" value={reading.status} icon={ShieldAlert} severity={severity} subtitle="Computed from gas level" />
         </div>
       </BlurFade>
 
