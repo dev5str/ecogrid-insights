@@ -46,10 +46,7 @@ const roleMenus: Record<UserRole, { title: string; url: string; icon: typeof Zap
     { title: "Air Purifier", url: "/air", icon: Wind },
     { title: "Devices", url: "/dashboard/devices", icon: Cpu },
   ],
-  student: [
-    { title: "Campus", url: "/dashboard/campus", icon: Users },
-    { title: "Eco Score", url: "/dashboard/sustainability", icon: Leaf },
-  ],
+  student: [{ title: "Campus", url: "/dashboard/campus", icon: Users }],
 };
 
 export function DashboardSidebar() {

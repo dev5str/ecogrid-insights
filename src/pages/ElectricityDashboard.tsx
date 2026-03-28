@@ -54,7 +54,7 @@ export default function ElectricityDashboard() {
       <BlurFade delay={0.12}>
         <ZoneBreakdown
           title="Load by campus zone"
-          subtitle="University zones — live simulated kW per feeder (segmented load view)"
+          subtitle="University zones - live simulated kW per feeder (segmented load view)"
           unit="kW"
           accentClass="bg-yellow-400"
           mode="segmented"

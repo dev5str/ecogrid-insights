@@ -28,7 +28,7 @@ export interface ElectricityAnomaly {
 
 const CHENNAI_SEED: Omit<ChennaiInstitution, "ecoScore">[] = [
   { id: "iitm", name: "Indian Institute of Technology Madras", area: "Adyar" },
-  { id: "anna", name: "Anna University — CEG Campus", area: "Guindy" },
+  { id: "anna", name: "Anna University - CEG Campus", area: "Guindy" },
   { id: "ssn", name: "SSN College of Engineering", area: "Kalavakkam" },
   { id: "srm", name: "SRM Institute of Science and Technology", area: "Kattankulathur" },
   { id: "vit", name: "VIT Chennai", area: "Kelambakkam" },

@@ -53,7 +53,7 @@ export default function WaterDashboard() {
       <BlurFade delay={0.12}>
         <ZoneBreakdown
           title="Flow by campus zone"
-          subtitle="Main risers and wings — simulated L/min (segmented flow view)"
+          subtitle="Main risers and wings - simulated L/min (segmented flow view)"
           unit="L/m"
           accentClass="bg-blue-400"
           mode="segmented"

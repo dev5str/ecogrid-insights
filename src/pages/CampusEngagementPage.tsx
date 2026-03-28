@@ -41,7 +41,7 @@ export default function CampusEngagementPage() {
 
   const fakePhotoPick = () => {
     setPhotoAttached(true);
-    toast.message("Photo attached (simulation — no file uploaded)");
+    toast.message("Photo attached (simulation - no file uploaded)");
   };
 
   return (
@@ -200,7 +200,7 @@ export default function CampusEngagementPage() {
                             disabled={r.pointsAwarded > 0}
                             onClick={() => {
                               simulateValidation(r.id);
-                              toast.success("Validated with telemetry — points issued (demo)");
+                              toast.success("Validated with telemetry - points issued (demo)");
                             }}
                           >
                             Validate &amp; credit

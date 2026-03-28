@@ -73,7 +73,7 @@ export default function SustainabilityInsightsPage() {
 
   const printCompliance = async () => {
     const reportMonth = new Date().toLocaleString("en-IN", { month: "long", year: "numeric" });
-    const institutionName = "Demo campus — EcoGrid pilot (Chennai)";
+    const institutionName = "Demo campus - EcoGrid pilot (Chennai)";
     const metrics: GeminiComplianceMetrics = {
       institutionName,
       reportPeriod: reportMonth,
@@ -112,7 +112,7 @@ export default function SustainabilityInsightsPage() {
         narrative,
       });
       if (!ok) toast.error("Allow pop-ups to print or save as PDF");
-      else toast.success("Report ready — use the print dialog to save as PDF");
+      else toast.success("Report ready - use the print dialog to save as PDF");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not generate report");
     } finally {
@@ -159,10 +159,10 @@ export default function SustainabilityInsightsPage() {
             <PixelCard className="rounded-xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm">
               <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-semibold">Chennai institutions — live leaderboard</h2>
+                  <h2 className="text-base font-semibold">Chennai institutions - live leaderboard</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Composite EcoGrid Health Score (0–100): waste fill pressure, indoor air proxy, water &amp; electricity
-                    deviation from baseline — simulated for demo.
+                    deviation from baseline - simulated for demo.
                   </p>
                 </div>
                 <Badge variant="outline" className="shrink-0 border-emerald-500/40 text-emerald-400">
@@ -262,13 +262,13 @@ export default function SustainabilityInsightsPage() {
                 <div>
                   <h2 className="text-base font-semibold">Automated compliance draft</h2>
                   <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                    Sends simulated dashboard metrics to <strong>Google Gemini</strong>, returns a draft narrative, then
+                    Sends simulated dashboard metrics to <strong>local Ollama</strong> (default model <code className="text-xs">llava</code>), returns a draft narrative, then
                     opens a print-ready page. Save as PDF from the browser print dialog.
                   </p>
                   <ul className="mt-3 list-inside list-disc text-xs text-muted-foreground">
                     <li>Uses live leaderboard, carbon split, and sample electricity anomalies from this page</li>
                     <li>Pair with CSV exports for auditors who want raw series</li>
-                    <li>Human review required — model output is indicative only</li>
+                    <li>Human review required - model output is indicative only</li>
                   </ul>
                 </div>
                 <Button
@@ -286,7 +286,7 @@ export default function SustainabilityInsightsPage() {
 
           <TabsContent value="export" className="mt-4 space-y-4">
             <PixelCard className="rounded-xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm">
-              <h2 className="mb-1 text-base font-semibold">Predictive data lake — CSV extracts</h2>
+              <h2 className="mb-1 text-base font-semibold">Predictive data lake - CSV extracts</h2>
               <p className="mb-4 text-sm text-muted-foreground">
                 Timestamp, zone, bin ids, usage, and baselines in one file; plus electricity-only anomaly context for
                 your ML / BI pipeline.

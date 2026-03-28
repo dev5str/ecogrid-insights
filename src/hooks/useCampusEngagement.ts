@@ -24,7 +24,7 @@ export interface StudentLeaderEntry {
 const TYPE_LABEL: Record<CampusReportType, string> = {
   untidy_room: "Untidy classroom / needs housekeeping",
   water_leak: "Open tap or water leakage",
-  lights_empty_room: "Lights/fans on — room appears empty",
+  lights_empty_room: "Lights/fans on - room appears empty",
 };
 
 function seedReports(): CampusReport[] {
@@ -55,7 +55,7 @@ function seedLeaderboard(): StudentLeaderEntry[] {
   ];
 }
 
-/** Internal state factory — prefer `useCampusEngagement` from `@/contexts/CampusEngagementContext` in the dashboard. */
+/** Internal state factory - prefer `useCampusEngagement` from `@/contexts/CampusEngagementContext` in the dashboard. */
 export function useCampusEngagementState() {
   const [reports, setReports] = useState<CampusReport[]>(seedReports);
   const [leaderboard, setLeaderboard] = useState<StudentLeaderEntry[]>(seedLeaderboard);

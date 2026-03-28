@@ -7,19 +7,31 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** Printable window with Gemini-generated narrative (escaped; safe for print / Save as PDF). */
+/** Strip markdown-style headings and bullet prefixes for cleaner PDF/print output. */
+function stripNarrativeForPrint(narrative: string): string {
+  return narrative
+    .split("\n")
+    .map((line) => {
+      let s = line.replace(/^\s*#{2}\s+/, "");
+      s = s.replace(/^\s*-\s+/, "");
+      return s;
+    })
+    .join("\n");
+}
+
+/** Printable window with Ollama (local LLM) narrative (escaped; safe for print / Save as PDF). */
 export function openComplianceReportWithGeminiNarrative(opts: {
   institutionName: string;
   reportMonth: string;
   narrative: string;
 }) {
   const { institutionName, reportMonth, narrative } = opts;
-  const body = escapeHtml(narrative);
+  const body = escapeHtml(stripNarrativeForPrint(narrative));
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>EcoGrid Environmental Compliance — ${escapeHtml(institutionName)}</title>
+  <title>EcoGrid Environmental Compliance - ${escapeHtml(institutionName)}</title>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 820px; margin: 0 auto; color: #111; }
     h1 { font-size: 1.35rem; margin-bottom: 0.25rem; }
@@ -32,8 +44,7 @@ export function openComplianceReportWithGeminiNarrative(opts: {
 <body>
   <h1>Environmental compliance draft (AI-assisted)</h1>
   <p class="meta"><strong>Institution:</strong> ${escapeHtml(institutionName)}<br/>
-  <strong>Reporting period:</strong> ${escapeHtml(reportMonth)}<br/>
-  <strong>Source:</strong> EcoGrid Insights + Google Gemini (demo — verify all facts before submission)</p>
+  <strong>Reporting period:</strong> ${escapeHtml(reportMonth)}</p>
   <p class="badge">Narrative below is model-generated from simulated dashboard metrics. Human review required.</p>
   <pre class="narrative">${body}</pre>
 </body>
@@ -54,7 +65,7 @@ export function openComplianceReportPrint(opts: { institutionName: string; repor
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>EcoGrid Environmental Compliance — ${institutionName}</title>
+  <title>EcoGrid Environmental Compliance - ${institutionName}</title>
   <style>
     body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; color: #111; }
     h1 { font-size: 1.35rem; margin-bottom: 0.25rem; }
@@ -71,7 +82,7 @@ export function openComplianceReportPrint(opts: { institutionName: string; repor
   <h1>Environmental Performance Summary</h1>
   <p class="meta"><strong>Institution:</strong> ${institutionName}<br/>
   <strong>Reporting period:</strong> ${reportMonth}<br/>
-  <strong>System:</strong> EcoGrid Insights (automated draft — verify before NAAC / ISO 14001 / CSR submission)</p>
+  <strong>System:</strong> EcoGrid Insights (automated draft - verify before NAAC / ISO 14001 / CSR submission)</p>
 
   <h2>1. Executive summary</h2>
   <p>Consolidated electricity, water, waste, and indoor air metrics were monitored across campus zones. This document is generated from live telemetry snapshots and is intended as a starting point for accreditation and compliance filings.</p>

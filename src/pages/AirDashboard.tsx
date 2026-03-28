@@ -183,7 +183,7 @@ export default function AirDashboard() {
       <BlurFade delay={0.14}>
         <ZoneBreakdown
           title="Air quality by zone"
-          subtitle="MQ135-style gas PPM — per campus zone (simulated, segmented view)"
+          subtitle="MQ135-style gas PPM - per campus zone (simulated, segmented view)"
           unit="ppm"
           accentClass="bg-sky-400"
           mode="segmented"

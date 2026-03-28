@@ -2,8 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { SYSTEM_MODULES, useSystemPower, type SystemModule } from "@/contexts/SystemPowerContext";
 import { LogOut, Clock, Activity, SlidersHorizontal } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { EcoGridLogo } from "@/components/brand/EcoGridLogo";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useId } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -36,14 +35,6 @@ export function TopBar() {
     navigate("/");
   };
 
-  const homePath = user
-    ? user.role === "air"
-      ? "/air"
-      : user.role === "student"
-        ? "/dashboard/campus"
-        : `/dashboard/${user.role}`
-    : "/";
-
   const routeModule = moduleForPath(location.pathname);
   const anySystemLive = SYSTEM_MODULES.some((m) => isOn(m));
   const pageLive = routeModule != null ? isOn(routeModule) : anySystemLive;
@@ -51,13 +42,6 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/30 glass-strong px-4">
       <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
-      <Link
-        to={homePath}
-        className="flex min-w-0 items-center gap-2 rounded-lg pr-2 transition-colors hover:bg-secondary/50"
-      >
-        <EcoGridLogo className="h-8 w-8 shrink-0 rounded-md" />
-        <span className="hidden font-bold tracking-tight sm:inline">EcoGrid</span>
-      </Link>
       <div className="flex-1" />
 
       {user?.role !== "student" ? (

@@ -1,14 +1,28 @@
 /**
- * Calls Google Gemini to draft NAAC / ISO 14001–style narrative from demo metrics.
+ * Drafts NAAC / ISO 14001–style narrative via **local Ollama** (`/api/chat`), default model **llava**.
  *
- * API keys in the frontend are visible to anyone — use only for demos or proxy via your backend in production.
- * Override with VITE_GEMINI_API_KEY in `.env.local` if you rotate the key.
+ * **Development:** uses `/api/ollama/api/chat` (Vite proxy → `OLLAMA_HOST` or `http://127.0.0.1:11434`).
+ * **Production / preview:** calls `VITE_OLLAMA_URL` (e.g. `http://127.0.0.1:11434`); set Ollama `OLLAMA_ORIGINS` if the browser blocks CORS.
+ *
+ * Optional `.env.local`: `VITE_OLLAMA_MODEL=llava` (or `llava:7b`, etc.), `OLLAMA_HOST=http://127.0.0.1:11434` for the dev proxy target.
  */
-const GEMINI_API_KEY =
-  (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim() ||
-  "AIzaSyDpe-l_kOVdb0sMTvuj8zsLnL_kJZ-gG60";
+function normalizeEnvValue(raw: string | undefined): string {
+  let s = (raw ?? "").trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
 
-const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"] as const;
+const OLLAMA_MODEL = normalizeEnvValue(import.meta.env.VITE_OLLAMA_MODEL as string | undefined) || "llava";
+
+function ollamaChatUrl(): string {
+  if (import.meta.env.DEV) {
+    return "/api/ollama/api/chat";
+  }
+  const base = normalizeEnvValue(import.meta.env.VITE_OLLAMA_URL as string | undefined) || "http://127.0.0.1:11434";
+  return `${base.replace(/\/$/, "")}/api/chat`;
+}
 
 export interface GeminiComplianceMetrics {
   institutionName: string;
@@ -29,9 +43,9 @@ export interface GeminiComplianceMetrics {
 function buildPrompt(metrics: GeminiComplianceMetrics): string {
   return `You are an environmental compliance writer for Indian higher-education institutions.
 
-Write a formal **environmental performance and compliance draft** suitable as an annex for NAAC self-study, ISO 14001 evidence, or CSR reporting. Use professional English. Do not invent real regulations — say "indicative" or "draft" where needed.
+Write a formal **environmental performance and compliance draft** suitable as an annex for NAAC self-study, ISO 14001 evidence, or CSR reporting. Use professional English. Do not invent real regulations - say "indicative" or "draft" where needed.
 
-**Input data (demo / simulated EcoGrid telemetry — treat as sample only):**
+**Input data (demo / simulated EcoGrid telemetry - treat as sample only):**
 ${JSON.stringify(metrics, null, 2)}
 
 **Required structure (use these exact section titles as lines starting with ##):**
@@ -50,47 +64,50 @@ Rules:
 - Use bullet lines starting with "- " where lists help readability.`;
 }
 
+type OllamaChatResponse = {
+  message?: { role?: string; content?: string };
+  error?: string;
+};
+
 export async function fetchGeminiComplianceNarrative(metrics: GeminiComplianceMetrics): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    throw new Error("Missing Gemini API key. Set VITE_GEMINI_API_KEY in .env.local.");
-  }
-
   const prompt = buildPrompt(metrics);
-  let lastErr = "Unknown error";
+  const url = ollamaChatUrl();
 
-  for (const model of MODELS) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.35,
-          maxOutputTokens: 4096,
-        },
-      }),
-    });
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: OLLAMA_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      stream: false,
+      options: {
+        temperature: 0.35,
+        num_predict: 4096,
+      },
+    }),
+  });
 
-    const data = (await res.json()) as {
-      error?: { message?: string };
-      candidates?: { content?: { parts?: { text?: string }[] } }[];
-    };
+  const raw = (await res.json()) as OllamaChatResponse & { message?: { content?: string } };
 
-    if (!res.ok) {
-      lastErr = data.error?.message ?? res.statusText;
-      continue;
-    }
-
-    const text =
-      data.candidates
-        ?.flatMap((c) => c.content?.parts ?? [])
-        .map((p) => p.text ?? "")
-        .join("") ?? "";
-
-    if (text.trim()) return text.trim();
-    lastErr = "Empty model response";
+  if (!res.ok) {
+    const msg = typeof raw.error === "string" ? raw.error : res.statusText;
+    throw new Error(
+      `Ollama (${OLLAMA_MODEL}): ${msg}. Pull the model with: ollama pull ${OLLAMA_MODEL} - ensure Ollama is running (ollama serve).`,
+    );
   }
 
-  throw new Error(lastErr);
+  if (typeof raw.error === "string" && raw.error) {
+    throw new Error(
+      `Ollama (${OLLAMA_MODEL}): ${raw.error}. Try: ollama pull ${OLLAMA_MODEL}`,
+    );
+  }
+
+  const text = raw.message?.content?.trim() ?? "";
+  if (!text) {
+    throw new Error(
+      `Ollama returned an empty reply for model "${OLLAMA_MODEL}". Try a text model (e.g. llama3.2) via VITE_OLLAMA_MODEL if llava struggles with long text-only prompts.`,
+    );
+  }
+
+  return text;
 }
